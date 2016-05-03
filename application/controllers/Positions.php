@@ -17,12 +17,7 @@ class positions extends HR_Controller
 	];
 
 	protected $fields = [
-		['name' => 'day_of_week_start', 	'label' => 'day of week start', 	'rules' => 'required|callback__validate_day_of_week'],
-		['name' => 'day_of_week_end', 		'label' => 'day of week end', 		'rules' => 'required|callback__validate_day_of_week'],
-		['name' => 'hour_of_day_start_am', 	'label' => 'time in (AM)', 			'rules' => 'required|callback__validate_am_time_in'],
-		['name' => 'hour_of_day_start_pm', 	'label' => 'time in (PM)', 			'rules' => 'required|callback__validate_pm_time_in'],
-		['name' => 'hour_of_day_end_am', 	'label' => 'time out (AM)', 		'rules' => 'required|callback__validate_am_time_out'],
-		['name' => 'hour_of_day_end_pm', 	'label' => 'time out (PM)', 		'rules' => 'required|callback__validate_pm_time_out']
+		['name' => 'workday[]', 'label' => 'workday/s', 'rules' => 'required']
 	];
 
 	protected $validation_errors = [];
@@ -36,7 +31,8 @@ class positions extends HR_Controller
 	public function index()
 	{
 		$this->generate_page('positions/listing', [
-			'items' => $this->position->all()
+			'items' => $this->position->all(),
+			'days' => $this->days
 		]);
 	}
 
@@ -128,9 +124,24 @@ class positions extends HR_Controller
 		}else{
 			$this->form_validation->set_rules('name', 'position name', 'required|callback__validate_position_name');
 		}
-		$this->form_validation->set_rules('login_type', 'login account type', 'required|in_list[sv,re,po,hr]', [
+		$this->form_validation->set_rules('attendance_type', 'attendance type', 'required|in_list[re,fl]', [
 			'in_list' => 'Please provide a valid %s.'
 		]);
+
+		if($this->input->post('attendance_type')=="re"){
+			$this->fields += [
+				['name' => 'hour_of_day_start_am', 'label' => 'time in (AM)', 'rules' => 'required|callback__validate_am_time_in'],
+				['name' => 'hour_of_day_start_pm', 'label' => 'time in (PM)', 'rules' => 'required|callback__validate_pm_time_in'],
+				['name' => 'hour_of_day_end_am', 'label' => 'time out (AM)', 'rules' => 'required|callback__validate_am_time_out'],
+				['name' => 'hour_of_day_end_pm', 'label' => 'time out (PM)', 'rules' => 'required|callback__validate_pm_time_out']
+			];
+		}
+		else if($this->input->post('attendance_type')=="fl"){
+			$this->fields += [
+				['name' => 'required_work_hours', 'label' => 'required work hours', 'rules' => 'required|is_natural']
+			];
+		}
+
 		foreach($this->fields AS $field){
 			$this->form_validation->set_rules($field['name'], $field['label'], $field['rules']);
 		}
@@ -139,15 +150,25 @@ class positions extends HR_Controller
 	public function _format_data($mode)
 	{
 		$input = $this->input->post();
-		$data = elements(['name', 'login_type'], $this->input->post());
+		$data = elements(['name', 'attendance_type'], $this->input->post());
+		if($input['attendance_type']=="re"){
+			$data += [
+				'hour_of_day_start_am' => date_create($input['hour_of_day_start_am'])->format('H:i'),
+				'hour_of_day_end_am' => date_create($input['hour_of_day_end_am'])->format('H:i'),
+				'hour_of_day_start_pm' => date_create($input['hour_of_day_start_pm'])->format('H:i'),
+				'hour_of_day_end_pm' => date_create($input['hour_of_day_end_pm'])->format('H:i')
+			];
+		}
+		else if($input['attendance_type']=="fl"){
+			$data += [
+				'work_hours' => $input['required_work_hours']
+			];
+		}
+
 		$data += [
-			'hour_of_day_start_am' => date_create($input['hour_of_day_start_am'])->format('H:i'),
-			'hour_of_day_end_am' => date_create($input['hour_of_day_end_am'])->format('H:i'),
-			'hour_of_day_start_pm' => date_create($input['hour_of_day_start_pm'])->format('H:i'),
-			'hour_of_day_end_pm' => date_create($input['hour_of_day_end_pm'])->format('H:i'),
-			'day_of_week_start' => $input['day_of_week_start'],
-			'day_of_week_end' => $input['day_of_week_end']
+			'workday' => json_encode($input['workday'])
 		];
+
 		return $data;
 	}
 
@@ -157,9 +178,9 @@ class positions extends HR_Controller
 		return $this->position->has_unique_name($val, $this->id);
 	}
 
-	public function _validate_day_of_week($val)
+	public function _validate_workday($val)
 	{
-		$this->form_validation->set_message('_validate_day_of_week', 'Please select %s.');
+		$this->form_validation->set_message('_validate_workday', 'Please select %s.');
 		return in_array($val, array_keys($this->days));
 	} 
 

@@ -16,7 +16,7 @@ class Payslip extends HR_Controller
 	{
 		$employees = $this->employee->all();
 		foreach($employees AS &$emp){
-			$emp['fullname'] = "{$emp['lastname']}, {$emp['firstname']} {$emp['middlename']} [{$emp['id']}]";
+			$emp['fullname'] = "{$emp['lastname']}, {$emp['firstname']} {$emp['middleinitial']} [{$emp['id']}]";
 		}
 		$this->import_plugin_script(['bootstrap-datepicker/js/bootstrap-datepicker.min.js']);
 		$this->import_page_script(['manage-payslip.js']);

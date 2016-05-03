@@ -16,7 +16,7 @@
       <div class="box box-primary">
         <div class="box-body box-profile">
           <img class="profile-user-img img-responsive img-circle" src="<?= base_url('assets/img/display-photo-placeholder.png')?>" alt="User profile picture">
-          <h3 class="profile-username text-center"><?= "{$employee['firstname']} {$employee['middlename']} {$employee['lastname']}"?></h3>
+          <h3 class="profile-username text-center"><?= "{$employee['firstname']} {$employee['middleinitial']} {$employee['lastname']}"?></h3>
           <p class="text-muted text-center"><?= $employee['position']?></p>
 
           <ul class="list-group list-group-unbordered">
@@ -63,7 +63,7 @@
             	<div class="form-group">
             		<label class="control-label col-sm-3">Name</label>
             		<div class="col-sm-9">
-            			<p class="form-control-static"><?= "{$employee['firstname']} {$employee['middlename']} {$employee['lastname']}"?></p>
+            			<p class="form-control-static"><?= "{$employee['firstname']} {$employee['middleinitial']} {$employee['lastname']}"?></p>
             		</div>
             	</div>
             	<div class="form-group">

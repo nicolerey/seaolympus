@@ -20,7 +20,7 @@
               <td><a href="<?= base_url("employees/edit/{$row['id']}")?>"><?= $row['id']?></a></td>
       				<td><?= $row['lastname']?></td>
       				<td><?= $row['firstname']?></td>
-      				<td><?= $row['middlename']?></td>
+      				<td><?= $row['middleinitial']?></td>
       				<td><?= $row['gender'] === 'M' ? 'Male' : 'Female' ?></td>
               <td><?= $row['department'] ?></td>
               <td><?= $row['position'] ?></td>

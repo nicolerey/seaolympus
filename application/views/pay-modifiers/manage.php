@@ -23,9 +23,16 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Type</label>
+          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Particular Type</label>
           <div class="col-sm-5">
-            <?= form_dropdown('type', ['' => '', 'a' => 'Additionals', 'd' => 'Deductions'], preset($data, 'type', ''),'class="form-control"')?>
+            <?= form_dropdown('particular_type', ['' => '', 'd' => 'Daily', 'm' => 'Monthly'], preset($data, 'particular_type', ''), 'class="form-control"')?>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span></label>
+          <div class="col-sm-9">
+            <label class="radio-inline"><input type="radio" name="type" value="a"<?php echo (isset($data['type']))?(($data['type']=='a')?' checked':''):'';?>/> Additionals</label>
+            <label class="radio-inline"><input type="radio" name="type" value="d"<?php echo (isset($data['type']))?(($data['type']=='d')?' checked':''):'';?>/> Deductions</label>
           </div>
         </div>
         <!-- <div class=> -->

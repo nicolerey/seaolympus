@@ -11,13 +11,20 @@
     <div class="box-body no-padding">
       <table class="table table-hover table-striped">
       	<thead>
-			<tr><th>Name</th><th>Login account type</th></tr>      		
+			<tr><th>Name</th><th>Login account type</th><th>Workday/s</th></tr>      		
       	</thead>
       	<tbody>
       		<?php foreach($items AS $row):?>
       			<tr>
               <td><a href="<?= base_url("positions/edit/{$row['id']}")?>"><?= $row['name']?></a></td>
-              <td><?= account_type($row['login_type'])?></td>
+              <td><?= account_type($row['attendance_type'])?></td>
+              <td>
+                <?php if($row['workday']!=NULL):?>
+                  <?php foreach(json_decode($row['workday']) as $workday):?>
+                    <?= substr($days[$workday], 0, 3).".";?>
+                  <?php endforeach;?>
+                <?php endif;?>
+              </td>
       			</tr>
       		<?php endforeach;?>
       	</tbody>

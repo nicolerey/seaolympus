@@ -14,7 +14,7 @@ class My_payslip extends HR_Controller
 	public function index()
 	{
 		$this->generate_page('my-payslip/listing', [
-			'items' => $this->payslip->all(user_id())
+			'items' => $this->payslip->all()
 		]);
 	}
 

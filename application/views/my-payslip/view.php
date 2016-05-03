@@ -23,7 +23,7 @@
         <div class="form-group">
           <label class="col-sm-2 control-label">Name</label>
           <div class="col-sm-5">
-            <p class="form-control-static"><?= "{$employee_data['firstname']} {$employee_data['middlename']} {$employee_data['lastname']}"?></p>
+            <p class="form-control-static"><?= "{$employee_data['firstname']} {$employee_data['middleinitial']} {$employee_data['lastname']}"?></p>
           </div>
         </div>
         <div class="form-group">

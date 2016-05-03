@@ -66,6 +66,7 @@ class Employees extends HR_Controller
 			return;
 		}
 		$input = $this->_format_data(MODE_CREATE);
+		print_r($input);
 		if($this->employee->create($input)){
 			$this->output->set_output(json_encode(['result' => TRUE]));
 			return;
@@ -119,22 +120,33 @@ class Employees extends HR_Controller
 
 	public function _perform_validation($mode)
 	{
+		if($this->input->post('account_type')=="ad"){
+			if($mode === MODE_CREATE){
+				$this->form_validation->set_rules('password', 'password', 'trim|required|matches[confirm_password]');
+				$this->form_validation->set_rules('confirm_password', 'password confirmation', 'trim|required|matches[password]');
+			}
+			else{
+				$this->form_validation->set_rules('old_password', 'user password', 'trim|required|callback__validate_password[password]');
+				$this->form_validation->set_rules('password', 'password', 'trim|matches[confirm_password]');
+				$this->form_validation->set_rules('confirm_password', 'password confirmation', 'trim|matches[password]');
+			}
+		}
+
 		if($mode === MODE_CREATE){
 			$this->form_validation->set_rules('rfid_uid', 'RFID UID', 'trim|is_unique[employees.rfid_uid]');
 			$this->form_validation->set_rules('sss_number', 'SSS #', 'required|trim|is_unique[employees.sss_number]');
 			$this->form_validation->set_rules('pagibig_number', 'PAG-IBIG #', 'required|trim|is_unique[employees.pagibig_number]');
-			$this->form_validation->set_rules('tin_number', 'TIN #', 'required|trim|is_unique[employees.tin_number]|');
 			$this->form_validation->set_rules('email_address', 'email address', 'required|valid_email|is_unique[employees.email_address]');
-		}else{
+		}else{			
 			$this->form_validation->set_rules('rfid_uid', 'RFID UID', 'callback__validate_rfid_uid');
 			$this->form_validation->set_rules('email_address', 'email address', 'required|valid_email|callback__validate_email');
 			$this->form_validation->set_rules('sss_number', 'SSS #', 'required|trim|callback__validate_uniqueness[sss_number]');
 			$this->form_validation->set_rules('pagibig_number', 'PAG-IBIG #', 'required|trim|callback__validate_uniqueness[pagibig_number]');
-			$this->form_validation->set_rules('tin_number', 'TIN #', 'required|trim|callback__validate_uniqueness[tin_number]');
 		}
 		$this->form_validation->set_rules('firstname', 'first name', 'required');
 		$this->form_validation->set_rules('lastname', 'last name', 'required');
-		$this->form_validation->set_rules('middlename', 'middle name', 'required');
+		$this->form_validation->set_rules('middleinitial', 'middle initial', 'required');
+		$this->form_validation->set_rules('account_type', 'account type', 'required|in_list[ad,em]', ['in_list' => 'Please provide a valid %s.']);
 		$this->form_validation->set_rules('birthdate', 'date of birth', 'required|callback__validate_date');
 		$this->form_validation->set_rules('gender', 'gender', 'required|in_list[M,F]', ['in_list' => 'The %s can only be male or female.']);
 		$this->form_validation->set_rules('civil_status', 'civil status', 'required|in_list[sg,m,sp,d,w]', ['in_list' => 'Please provide a valid']);
@@ -155,8 +167,9 @@ class Employees extends HR_Controller
 		$basic_info = [];
 		$basic_info += elements([
 			'firstname', 
-			'middlename', 
-			'lastname', 
+			'middleinitial', 
+			'lastname',
+			'account_type',
 			'birthplace', 
 			'gender', 
 			'civil_status',
@@ -169,6 +182,20 @@ class Employees extends HR_Controller
 			'pagibig_number',
 			'tin_number',
 		], $this->input->post(), NULL);
+
+		if($mode===MODE_CREATE){
+			$basic_info += [
+				'password' => md5($this->input->post('password'))
+			];
+		}
+		else{
+			if(!empty($this->input->post('password'))){
+				$basic_info += [
+					'password' => md5($this->input->post('password'))
+				];
+			}
+		}
+
 		$basic_info += [
 			'birthdate' => date('Y-m-d', strtotime($this->input->post('birthdate'))),
 			'date_hired' => date('Y-m-d', strtotime($this->input->post('date_hired'))),
@@ -197,6 +224,12 @@ class Employees extends HR_Controller
 			'position_id' => $this->input->post('position_id'),
 			'particulars' => $particulars
 		];
+	}
+
+	public function _validate_password($password)
+	{
+		$this->form_validation->set_message('_validate_password', 'The %s is incorrect.');
+		return $this->employee->is_password_correct(md5($password), $this->id);
 	}
 
 	public function _validate_rfid_uid($uid)

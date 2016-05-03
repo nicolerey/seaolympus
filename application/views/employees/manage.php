@@ -28,9 +28,46 @@
                 <input type="text" class="form-control" name="firstname" value="<?= preset($data, 'firstname', '')?>" />
                 <span class="help-block">First name</span>
               </div>
-              <div class="col-sm-3">
-                <input type="text" class="form-control" name="middlename" value="<?= preset($data, 'middlename', '')?>" />
+              <div class="col-sm-2">
+                <input type="text" class="form-control" name="middleinitial" value="<?= preset($data, 'middleinitial', '')?>" />
                 <span class="help-block">Middle initial</span>
+              </div>
+            </div>
+
+            <div class="form-group">              
+              <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Account type</label>
+              <div class="col-sm-3">
+              <?= form_dropdown('account_type', ['' => '', 'ad' => 'Admin', 'em' => 'Employee'], preset($data, 'account_type', ''), 'class="form-control" onChange="AccountTypeFunc(this.value)"')?>
+              </div>
+            </div>
+
+            <div class="password_fields"<?= (isset($data['account_type']) && $data['account_type']!="ad")?"style='display: none;'":"";?>>
+              <?php if($mode!==MODE_CREATE):?>
+                <div class="form-group">              
+                  <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> User password</label>
+                  <div class="col-sm-3">
+                    <?= form_password(['name'=>'old_password', 'class'=>'form-control']);?>
+                  </div>
+                </div>
+              <?php endif;?>
+
+              <div class="form-group password_field">              
+                <label class="col-sm-2 control-label">
+                  <?php if($mode===MODE_CREATE):?>
+                    <span class="fa fa-asterisk text-danger"></span>
+                  <?php endif;?>
+                   Enter account password</label>
+                <div class="col-sm-3">
+                  <?= form_password(['name'=>'password', 'class'=>'form-control']);?>
+                </div>
+                <label class="col-sm-2 control-label">
+                  <?php if($mode===MODE_CREATE):?>
+                    <span class="fa fa-asterisk text-danger"></span>
+                  <?php endif;?>
+                   Confirm password</label>
+                <div class="col-sm-3">
+                  <?= form_password(['name'=>'confirm_password', 'class'=>'form-control']);?>
+                </div>
               </div>
             </div>
             
@@ -110,7 +147,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> TIN #</label>
+              <label class="col-sm-2 control-label"> TIN #</label>
               <div class="col-sm-4">
                 <input type="text" class="form-control" name="tin_number" value="<?= preset($data, 'tin_number', '')?>" />
               </div>
@@ -195,3 +232,12 @@
     </div>
   </div>
 </section>
+
+<script>
+function AccountTypeFunc(account_type_value){
+  if(account_type_value=="ad")
+    $('.password_fields').show();
+  else if(account_type_value=="em")
+    $('.password_fields').hide();
+}
+</script>

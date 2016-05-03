@@ -16,7 +16,7 @@ class User_model extends CI_Model
 
     public function authenticate($email, $password)
     {
-        $this->db->select('emp.email_address AS id_number, emp.id, emp.firstname, emp.middlename, emp.lastname, emp.id_number, emp.is_locked, emp.gender, p.login_type AS type');
+        $this->db->select('emp.email_address AS id_number, emp.id, emp.firstname, emp.middleinitial, emp.lastname, emp.id_number, emp.is_locked, emp.gender, emp.account_type AS type');
         $this->db->from($this->table.' AS emp');
         $this->db->join('employee_positions AS emppos', 'emppos.employee_id = emp.id AND emppos.to IS NULL', 'left', FALSE);
         $this->db->join('positions AS p', 'p.id = emppos.position_id');
@@ -26,7 +26,7 @@ class User_model extends CI_Model
 
     public function get($employee_id)
     {
-        $this->db->select('p.login_type AS type, emp.is_locked')
+        $this->db->select('emp.account_type AS type, emp.is_locked')
             ->from($this->table.' AS emp')
             ->join('employee_positions AS emppos', 'emppos.employee_id = emp.id AND emppos.to IS NULL', 'left', FALSE)
             ->join('positions AS p', 'p.id = emppos.position_id')

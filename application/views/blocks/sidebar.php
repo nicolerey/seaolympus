@@ -25,7 +25,7 @@
                 <a href="<?= "{$url}home" ?>"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
             </li>
 
-            <?php if(role_is('hr')):?>
+            <?php if(role_is('ad')):?>
                 <li class="treeview <?= $active_nav === NAV_DATA_ENTRY ? 'active' : '' ?>">
                   <a href="#">
                     <i class="fa fa-pencil"></i>
@@ -47,24 +47,22 @@
                     </li>
                   </ul>
                 </li>
-            <?php endif;?>
+                
+                <li class="<?= $active_nav === NAV_PAY_MODIFIERS? 'active' : '' ?>">
+                    <a href="<?= "{$url}pay_modifiers" ?>"><i class="fa fa-cubes"></i> <span>Pay Particulars</span></a>
+                </li>
 
-            <?php if(role_is('po')):?>
-            <li class="<?= $active_nav === NAV_PAY_MODIFIERS? 'active' : '' ?>">
-                <a href="<?= "{$url}pay_modifiers" ?>"><i class="fa fa-cubes"></i> <span>Pay Particulars</span></a>
-            </li>
-
-            <li class="<?= $active_nav === NAV_PAYSLIP ? 'active' : '' ?>">
-                <a href="<?= "{$url}payslip" ?>"><i class="fa fa-sticky-note"></i> <span> Payslip</span></a>
-            </li>
-            <li class="<?= $active_nav === NAV_VIEW_ATTENDANCE? 'active' : '' ?>">
-                <a href="<?= "{$url}attendance/view" ?>"><i class="fa fa-calendar"></i> <span> Attendance</span></a>
-            </li>
+                <li class="<?= $active_nav === NAV_PAYSLIP ? 'active' : '' ?>">
+                    <a href="<?= "{$url}payslip" ?>"><i class="fa fa-sticky-note"></i> <span> Payslip</span></a>
+                </li>
+                <li class="<?= $active_nav === NAV_VIEW_ATTENDANCE? 'active' : '' ?>">
+                    <a href="<?= "{$url}attendance/view" ?>"><i class="fa fa-calendar"></i> <span> Attendance</span></a>
+                </li>
            <?php endif;?>
 
 
             <li class="<?= $active_nav === NAV_MY_PAYSLIP ? 'active' : '' ?>">
-                <a href="<?= "{$url}my_payslip" ?>"><i class="fa fa-sticky-note"></i> <span> My Payslips</span></a>
+                <a href="<?= "{$url}my_payslip" ?>"><i class="fa fa-sticky-note"></i> <span> View Payslips</span></a>
             </li>
 
             

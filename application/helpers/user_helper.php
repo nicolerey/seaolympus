@@ -75,11 +75,8 @@ if(!function_exists('account_type')){
 	function account_type($account_type)
 	{
 		switch($account_type){
-			case 'su': return 'Superuser Account';
-			case 'sv': return 'Supervisor Account';
-			case 're': return 'Regular Employee Account';
-			case 'po': return 'Payroll Officer Account';
-			case 'hr': return 'HR Officer Account';
+			case 're': return 'Regular Employee';
+			case 'fl': return 'Flexible Employee';
 			default: return NULL;
 		}
 	}	

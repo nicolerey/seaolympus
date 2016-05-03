@@ -18,11 +18,6 @@ class Employee_model extends CI_Model
         // get generated id
         $id = $this->db->insert_id();
 
-
-        //update password
-        $password = md5($id);
-        $this->db->update($this->table, ['password' => $password], ['id' => $id]);
-
         // insert department record
         $department = ['employee_id' => $id, 'department_id' => $data['department_id'], 'from' => date('Y-m-d')];
         $this->db->insert('employee_departments', $department);
@@ -136,6 +131,11 @@ class Employee_model extends CI_Model
         return $result;
     }
 
+    public function get_employee_name($id)
+    {
+        return $this->db->select('firstname, middleinitial, lastname')->from($this->table)->where('id', $id)->get()->row_array();
+    }
+
     public function delete($id)
     {
     	return $this->db->delete($this->table, ['id' => $id]);
@@ -144,6 +144,14 @@ class Employee_model extends CI_Model
     public function exists($id)
     {
         return $this->db->select('id')->from($this->table)->where('id', $id)->get()->num_rows() === 1;
+    }
+
+    public function is_password_correct($password, $id = FALSE)
+    {
+        if($id)
+            $this->db->where('id', $id);
+
+        return $this->db->select('password')->from($this->table)->where('password', $password)->get()->num_rows() !== 0;
     }
 
     public function has_unique_id_number($id_number, $id = FALSE)
@@ -202,7 +210,7 @@ class Employee_model extends CI_Model
 
     public function get_filed_requests($id)
     {
-        $this->db->select('empreq.*, CONCAT(emp.firstname, " ", emp.middlename, " ", emp.lastname) AS sender_fullname', FALSE);
+        $this->db->select('empreq.*, CONCAT(emp.firstname, " ", emp.middleinitial, " ", emp.lastname) AS sender_fullname', FALSE);
         $this->db->join('employees AS emp', 'emp.id = empreq.sender_id');
         $this->db->order_by('empreq.id', 'DESC');
         return $this->db->get_where('employee_requests AS empreq', ['empreq.sender_id' => $id])->result_array();
@@ -292,14 +300,16 @@ class Employee_model extends CI_Model
         return $this->db->get_where('employee_attendance', ['id' => $id])->row_array();
     }
 
-    public function attendance($id, $start_date = FALSE, $end_date = FALSE)
+    public function attendance($id = FALSE, $start_date = FALSE, $end_date = FALSE)
     {
 
         $this->db->select('a.*, ar.type, ar.custom_type_name')
             ->from('employee_attendance AS a')
             ->join('employee_requests AS ar', 'ar.id = a.request_id', 'left')
-            ->where('employee_id', $id)
             ->where('datetime_in IS NOT NULL AND datetime_out IS NOT NULL');
+
+        if($id)
+            $this->db->where('employee_id', $id);
 
         if($start_date){
             $this->db->where('DATE(datetime_in) >=', $start_date);
@@ -308,6 +318,8 @@ class Employee_model extends CI_Model
         if($end_date){
             $this->db->where('DATE(datetime_in) <=', $end_date);
         }
+
+        $this->db->order_by("datetime_in", "desc");
 
         return $this->db->get()->result_array();
     }
@@ -318,5 +330,25 @@ class Employee_model extends CI_Model
         return $this->db->where('id', $id)->update($this->table);
     }
 
+    public function check_empty_attendance($id)
+    {
+        $this->db->select('id, datetime_in');
+        $id = $this->db->get_where("employee_attendance", array("id"=>$id, "datetime_out"=>NULL))->row_array();
 
+        if($id)
+            return $id;
+        else
+            return NULL; 
+    }
+
+    public function update_employee_attendance($id, $datetime_out)
+    {
+        $this->db->set('datetime_out', $datetime_out);
+        return $this->db->where('id', $id)->update('employee_attendance');
+    }
+
+    public function insert_employee_attendance($data)
+    {
+        return $this->db->insert('employee_attendance', $data);
+    }
 }

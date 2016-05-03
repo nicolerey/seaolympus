@@ -11,20 +11,14 @@
     <div class="box-body no-padding">
       <table class="table table-hover table-striped">
       	<thead>
-			<tr><th>Name</th><th>Type</th><th>Status</th></tr>      		
+			<tr><th>Name</th><th>Particular Type</th><th>Type</th></tr>      		
       	</thead>
       	<tbody>
       		<?php foreach($items AS $row):?>
       			<tr>
               <td><a href="<?= base_url("pay_modifiers/edit/{$row['id']}")?>"><?= $row['name']?></a></td>
+              <td><?= ($row['particular_type']) ? ($row['particular_type'] === 'd' ? 'Daily' : 'Monthly') : '' ?></td>
       				<td><?= $row['type'] === 'a' ? 'Additionals' : 'Deductions' ?></td>
-              <td>
-              <?php if(intval($row['is_active'])):?>
-                <span class="label label-success">Active</span>
-              <?php else:?>
-                <span class="label label-warning">Inactive</span>
-              <?php endif;?>
-              </td>
       			</tr>
       		<?php endforeach;?>
       	</tbody>

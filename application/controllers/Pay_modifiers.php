@@ -102,13 +102,13 @@ class Pay_modifiers extends HR_Controller
 		}else{
 			$this->form_validation->set_rules('name', 'type', 'required|callback__validate_pay_modifier_name');
 		}
+		$this->form_validation->set_rules('particular_type', 'particular type', 'required|in_list[d,m]', ['in_list' => 'Please select a valid %s']);
 		$this->form_validation->set_rules('type', 'pay modifier type', 'required|in_list[a,d]', ['in_list' => 'Please select a valid %s']);
 	}
 
 	public function _format_data($mode)
 	{
-		$data = elements(['type', 'name'], $this->input->post());
-		$data['is_active'] = $this->input->post('is_active') ? 1 : NULL;
+		$data = elements(['type', 'name', 'particular_type'], $this->input->post());
 		return $data;
 	}
 

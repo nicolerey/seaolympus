@@ -10,12 +10,13 @@
     <div class="box-body no-padding">
       <table class="table table-hover table-striped">
       	<thead>
-			<tr><th>#</th><th>From</th><th>To</th></tr>      		
+			<tr><th>#</th><th>Employee Name</th><th>From</th><th>To</th></tr>      		
       	</thead>
       	<tbody>
       		<?php foreach($items AS $row):?>
       			<tr>
               <td><a href="<?= base_url("my_payslip/view/{$row['id']}")?>"><?= str_pad($row['id'], 4, 0, STR_PAD_LEFT)?></a></td>
+              <td><?= "{$row['firstname']} {$row['middleinitial']} {$row['lastname']}";?></td>
               <td><?= format_date($row['start_date'], 'd-M-Y')?></td>
               <td><?= format_date($row['end_date'], 'd-M-Y')?></td>
       			</tr>

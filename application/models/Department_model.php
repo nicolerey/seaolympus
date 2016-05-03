@@ -12,7 +12,7 @@ class Department_model extends CI_Model
 
 	public function all()
 	{
-		$this->db->select('dep.id, dep.id_number, dep.name, div.name AS division, CONCAT(emp.lastname, ", ", emp.firstname, " ", emp.middlename) AS supervisor', FALSE);
+		$this->db->select('dep.id, dep.id_number, dep.name, div.name AS division, CONCAT(emp.lastname, ", ", emp.firstname, " ", emp.middleinitial) AS supervisor', FALSE);
 		$this->db->from($this->table.' AS dep');
 		$this->db->join('division_departments AS divdep', 'divdep.department_id = dep.id', 'left');
 		$this->db->join('divisions AS div', 'div.id = divdep.division_id', 'left');
@@ -118,7 +118,7 @@ class Department_model extends CI_Model
 
 	public function get_employees($id)
 	{
-		$this->db->select('CONCAT(emp.lastname, ", ", emp.firstname, " ", emp.middlename) AS fullname, emp.id', FALSE);
+		$this->db->select('CONCAT(emp.lastname, ", ", emp.firstname, " ", emp.middleinitial) AS fullname, emp.id', FALSE);
 		$this->db->from('employee_departments AS empdep');
 		$this->db->join('employees AS emp', 'emp.id = empdep.employee_id');
 		$this->db->where('empdep.to IS NULL', FALSE, FALSE)->where('empdep.department_id', $id);

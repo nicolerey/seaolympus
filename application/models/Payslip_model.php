@@ -39,7 +39,7 @@ class Payslip_model extends CI_Model
 
 		$dates = [];
 		
-		foreach($attendance AS &$row){
+		foreach($attendance AS $row){
 
 			
 
@@ -65,91 +65,93 @@ class Payslip_model extends CI_Model
 			}
 
 			//if day is in between work day
-			if(($day >= $position['day_of_week_start'] && $day <= $position['day_of_week_end'])){
+			if(!empty($position['workday'])){
+				if(in_array($day, json_decode($position['workday']))){
 
-				unset($done_serving_pm_time);
-			
-				$row['am_hrs'] = 0;
-				$row['pm_hrs'] = 0;
+					unset($done_serving_pm_time);
+				
+					$row['am_hrs'] = 0;
+					$row['pm_hrs'] = 0;
 
-				// if positive = late
-				$in_AM = ($time_in - $o_time_in_am) / 60;
+					// if positive = late
+					$in_AM = ($time_in - $o_time_in_am) / 60;
 
-				$acceptable_late = $in_AM <= $employee_data['allowed_late_period'];
+					$acceptable_late = $in_AM <= $employee_data['allowed_late_period'];
 
-				// determine if late (AM) and is still in allowed late threshold
-				if($acceptable_late && !isset($dates[$date]['am'])){
-
-					// late still in threshold, accumulate late
-					$total_late_minutes += ($in_AM > 0) ? $in_AM : 0;
-
-					//get actual
-					$actual_am_hrs = ($o_time_out_am - $o_time_in_am) / 60 / 60;
-					
-					$actual_hrs_rendered += $actual_am_hrs;
-
-					$am_payable = $actual_hrs_rendered > $required_hrs_am ? $required_hrs_am : $actual_hrs_rendered;
-
-					$total_regular_hrs += $am_payable;
-
-					$row['am_hrs'] = $am_payable;
-
-					$dates[$date]['am'] = $row['am_hrs'] ;
-					
-				}else if(!$acceptable_late && !isset($dates[$date]['pm'])){ //lapas late
-					
-					// determine if late (PM) and is still in allowed late threshold
-					$temp_in_PM = ($time_in - $o_time_in_pm) / 60;
-					if($temp_in_PM <= $employee_data['allowed_late_period']){
+					// determine if late (AM) and is still in allowed late threshold
+					if($acceptable_late && !isset($dates[$date]['am'])){
 
 						// late still in threshold, accumulate late
-						$total_late_minutes += ($temp_in_PM > 0) ? $temp_in_PM : 0;
+						$total_late_minutes += ($in_AM > 0) ? $in_AM : 0;
+
+						//get actual
+						$actual_am_hrs = ($o_time_out_am - $o_time_in_am) / 60 / 60;
+						
+						$actual_hrs_rendered += $actual_am_hrs;
+
+						$am_payable = $actual_hrs_rendered > $required_hrs_am ? $required_hrs_am : $actual_hrs_rendered;
+
+						$total_regular_hrs += $am_payable;
+
+						$row['am_hrs'] = $am_payable;
+
+						$dates[$date]['am'] = $row['am_hrs'] ;
+						
+					}else if(!$acceptable_late && !isset($dates[$date]['pm'])){ //lapas late
+						
+						// determine if late (PM) and is still in allowed late threshold
+						$temp_in_PM = ($time_in - $o_time_in_pm) / 60;
+						if($temp_in_PM <= $employee_data['allowed_late_period']){
+
+							// late still in threshold, accumulate late
+							$total_late_minutes += ($temp_in_PM > 0) ? $temp_in_PM : 0;
+
+							$actual_pm_hrs = ($time_out - $o_time_in_pm) / 60 / 60;
+
+							if($actual_pm_hrs > 0){
+
+								$actual_hrs_rendered += $actual_pm_hrs;
+
+								$total_regular_hrs += $actual_pm_hrs;
+								$row['pm_hrs'] = $actual_pm_hrs;
+
+								$dates[$date]['pm'] = $row['pm_hrs'];
+							}
+
+						}
+						$done_serving_pm_time = TRUE;
+					}
+
+					// determine if served PM time
+					if(!isset($done_serving_pm_time) && $time_out > $o_time_in_pm && !isset($dates[$date]['pm'])){
 
 						$actual_pm_hrs = ($time_out - $o_time_in_pm) / 60 / 60;
 
-						if($actual_pm_hrs > 0){
+						$total_regular_hrs += $actual_pm_hrs;
 
-							$actual_hrs_rendered += $actual_pm_hrs;
+						$actual_hrs_rendered += $actual_pm_hrs;
+						
+						$row['pm_hrs'] = $actual_pm_hrs;
 
-							$total_regular_hrs += $actual_pm_hrs;
-							$row['pm_hrs'] = $actual_pm_hrs;
+						$dates[$date]['pm'] = $row['pm_hrs'];
+					}
 
-							$dates[$date]['pm'] = $row['pm_hrs'];
+					// add up am and pm served hrs
+					if(isset($dates[$date]['am']) && isset($dates[$date]['pm'])){
+						$hrs_rendered =  $dates[$date]['am'] + $dates[$date]['pm'];
+						// determine if has overtime
+						// note: overtime starts if served 1hour after time out
+						$overtime = $hrs_rendered - $required_hrs;
+						if($overtime >= 1){
+							$total_overtime_hrs += $overtime;
 						}
 
-					}
-					$done_serving_pm_time = TRUE;
-				}
-
-				// determine if served PM time
-				if(!isset($done_serving_pm_time) && $time_out > $o_time_in_pm && !isset($dates[$date]['pm'])){
-
-					$actual_pm_hrs = ($time_out - $o_time_in_pm) / 60 / 60;
-
-					$total_regular_hrs += $actual_pm_hrs;
-
-					$actual_hrs_rendered += $actual_pm_hrs;
-					
-					$row['pm_hrs'] = $actual_pm_hrs;
-
-					$dates[$date]['pm'] = $row['pm_hrs'];
-				}
-
-				// add up am and pm served hrs
-				if(isset($dates[$date]['am']) && isset($dates[$date]['pm'])){
-					$hrs_rendered =  $dates[$date]['am'] + $dates[$date]['pm'];
-					// determine if has overtime
-					// note: overtime starts if served 1hour after time out
-					$overtime = $hrs_rendered - $required_hrs;
-					if($overtime >= 1){
-						$total_overtime_hrs += $overtime;
+						if($overtime > 0){
+							$total_regular_hrs -= $overtime;
+						}
 					}
 
-					if($overtime > 0){
-						$total_regular_hrs -= $overtime;
-					}
 				}
-
 			}
 		}
 
@@ -247,7 +249,7 @@ class Payslip_model extends CI_Model
 
 	public function all($employee_id = FALSE)
 	{
-		$this->db->select('start_date, end_date, id')->from('payroll');
+		$this->db->select('p.start_date, p.end_date, p.id, e.firstname, e.middleinitial, e.lastname')->from('payroll AS p')->join('employees AS e', 'p.employee_id = e.id');
 		if($employee_id){
 			$this->db->where('employee_id', $employee_id);
 		}
