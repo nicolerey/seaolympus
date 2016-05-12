@@ -2,14 +2,13 @@
 
 class Payslip extends HR_Controller
 {
-	protected $active_nav = NAV_PAYSLIP;
+	protected $active_nav = NAV_MY_PAYSLIP;
 	protected $tab_title = 'Payslip';
 
 	public function __construct()
 	{
 		parent::__construct();
-		$this->load->model('Payslip_model', 'payslip');
-		$this->load->model('Employee_model', 'employee');
+		$this->load->model(['Payslip_model' => 'payslip', 'Employee_model' => 'employee']);
 	}
 
 	public function index()
@@ -70,12 +69,75 @@ class Payslip extends HR_Controller
 
 	public function adjust()
 	{
-		$input = elements(['id', 'amount'], $this->input->post());
-		if($this->payslip->adjust($input['id'], $input['amount'])){
-			$this->json_response(['result' => TRUE]);
-			return;
+		$input = $this->input->post();
+		print_r($input);
+		/*if(isset($input['additional_name']) || isset($input['deduction_name'])){
+			$this->_perform_validation();
+			if(!$this->form_validation->run()){
+				$this->output->set_output(json_encode([
+					'result' => FALSE,
+					'messages' => array_values($this->form_validation->error_array())
+				]));
+				return;
+			}
 		}
-		$this->json_response(['result' => FALSE]);
+
+		if($input){
+			$employee_id = $input['employee_id'];
+			$salary_particular = [];
+			if(isset($input['additional_name'])){
+				foreach ($input['additional_name'] as $key => $value) {
+					$salary_particular[] = [
+						'employee_id' => $employee_id,
+						'particulars_id' => $input['additional_name'][$key],
+						'amount' => $input['particular_rate'][$key]
+					];
+				}
+			}
+
+			if(isset($input['deduction_name'])){
+				foreach ($input['deduction_name'] as $key => $value) {
+					$salary_particular[] = [
+						'employee_id' => $employee_id,
+						'particulars_id' => $input['deduction_name'][$key],
+						'amount' => $input['deduction_particular_amount'][$key]
+					];
+				}
+			}
+
+			if(!empty($salary_particular)){
+				if($this->payslip->insert_salary_particular($salary_particular)){
+					$this->output->set_output(json_encode(['result' => TRUE]));
+						return;
+				}
+			}
+			else{
+				$this->output->set_output(json_encode(['result' => TRUE]));
+				return;
+			}
+
+			$this->output->set_output(json_encode([
+				'result' => FALSE,
+				'messages' => ['Unable to make a loan. Please try again later.']
+			]));
+			return;
+		}*/
+	}
+
+	public function _perform_validation()
+	{
+		$input = $this->input->post();
+		if(isset($input['additional_name'])){
+			echo "rey";
+			$this->form_validation->set_rules('additional_name[]', 'particular name', 'required');
+			$this->form_validation->set_rules('particular_rate[]', 'particular rate', 'required');
+		}
+
+		if(isset($input['deduction_name'])){
+			echo "arriesga";
+			$this->form_validation->set_rules('deduction_name[]', 'particular name', 'required');
+			$this->form_validation->set_rules('deduction_particular_amount[]', 'particular rate', 'required');
+		}
 	}
 
 	public function store()

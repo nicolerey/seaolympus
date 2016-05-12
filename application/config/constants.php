@@ -93,12 +93,12 @@ define('NAV_DATA_ENTRY', 'data_entry');
 define('NAV_USERS', 'users');
 define('NAV_TRACK_REQUESTS', 'track_request');
 define('NAV_SALARIES', 'salaries');
-define('NAV_PAYSLIP', 'payslip');
-define('NAV_PAYROLL', 'payroll');
 define('NAV_MY_PAYSLIP', 'my_payslip');
+define('NAV_PAYROLL', 'payroll');
 define('NAV_MY_ATTENDANCE', 'my_attendance');
 define('NAV_PAY_MODIFIERS', 'pay_modifiers');
 define('NAV_VIEW_ATTENDANCE', 'view_attendance');
+define('NAV_LOANS', 'loans');
 
 define('SUBNAV_EMPLOYEES', 'employee');
 define('SUBNAV_DIVISIONS', 'division');

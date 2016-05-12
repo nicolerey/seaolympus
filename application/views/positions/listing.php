@@ -20,8 +20,10 @@
               <td><?= account_type($row['attendance_type'])?></td>
               <td>
                 <?php if($row['workday']!=NULL):?>
-                  <?php foreach(json_decode($row['workday']) as $workday):?>
-                    <?= substr($days[$workday], 0, 3).".";?>
+                  <?php $work = json_decode($row['workday']);?>
+                  <?php foreach($work as $workday):?>
+                    <?= substr($days[$workday->from_day], 0, 3)."-".substr($days[$workday->to_day], 0, 3);?>
+                    <?= (end($work)!=$workday)?"|":""; ?>
                   <?php endforeach;?>
                 <?php endif;?>
               </td>

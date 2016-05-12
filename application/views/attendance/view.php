@@ -9,6 +9,23 @@
   <!-- Default box -->
   <div class="box box-solid">
       <div class="box-body">
+
+        <?php if($upload_status==1):?>
+          <div class="alert alert-success">
+            <ul class="list-unstyled">
+              <li>File upload was successful.</li>
+            </ul>
+          </div>
+        <?php endif;?>
+
+        <?php if($upload_status==2):?>
+          <div class="alert alert-danger">
+            <ul class="list-unstyled">
+              <li>File upload was NOT successful.</li>
+            </ul>
+          </div>
+        <?php endif;?>
+
         <div class="form-group">
           <form class="form-inline" method="GET" action="<?= current_url()?>">
             <?php if(isset($search_employee)):?>
@@ -32,7 +49,7 @@
         <div class="row form-group">
           <?= form_open_multipart('attendance/upload_attendance', 'class="form-inline"');?>
           <div class="col-sm-1">
-            <button type="submit" class="btn btn-default btn-flat">Upload</button>
+            <button type="submit" class="btn btn-primary btn-flat"><span class="glyphicon glyphicon-upload"></span> Upload</button>
           </div>
           <div class="col-sm-3" style="padding-top: 5px;">
             <input type="file" name="userfile"/>
@@ -41,17 +58,26 @@
 
         <hr>
         <table class="table table-bordered table-condensed table-striped">
-          <thead><tr class="active"><th>Employee Name</th><th>Date</th><th>Time in</th><th>Time out</th><th></th></tr></thead>
+          <thead><tr class="active"><th>Employee Name</th><th>Time in</th><th>Time out</th><th></th></tr></thead>
           <tbody>
             <?php if(empty($data)):?>
               <tr><td class="text-center" colspan="5">Nothing to display</td></tr>
             <?php else:?>
               <?php foreach($data as $attendance):?>
                 <tr>
-                  <td><?= $attendance['name'];?></td>
-                  <td><?= $attendance['date'];?></td>
-                  <td><?= $attendance['in'];?></td>
-                  <td><?= $attendance['out'];?></td>
+                  <td>
+                    <?= $attendance['name'];?>
+                  </td>
+                  <td>
+                    <a href="#" data-type="combodate" data-pk="<?= $attendance['emp_attendance_id'];?>" data-url="<?= base_url("attendance/save_datetime");?>" data-title="Select time in" class="editable_time" data-name="datetime_in">
+                      <?= ($attendance['datetime_in'])?$attendance['datetime_in']:"-"; ?>
+                    </a>
+                  </td>
+                  <td>
+                    <a href="#" data-type="combodate" data-pk="<?= $attendance['emp_attendance_id'];?>" data-url="<?= base_url("attendance/save_datetime");?>" data-title="Select time out" class="editable_time" data-name="datetime_out">
+                      <?= ($attendance['datetime_out'])?$attendance['datetime_out']:"-"; ?>
+                    </a>
+                  </td>
                   <td><?= $attendance['total_hours'];?> hrs</td>
                 </tr>
               <?php endforeach;?>

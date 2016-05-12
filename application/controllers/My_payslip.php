@@ -21,11 +21,21 @@ class My_payslip extends HR_Controller
 	public function view($id)
 	{
 		$employee_id = $this->input->get('employee_number') ? $this->input->get('employee_number') : user_id();
+		$this->load->model(['Employee_model' => 'employee', 'Pay_modifier_model' => 'pay_modifier']);
+		$particular_result = $this->employee->get_employee_pay_particulars($employee_id);
+		$emp_particulars = [];
+		if($particular_result){
+			foreach ($particular_result as $key => $value) {
+				array_push($emp_particulars, $value['particulars_id']);
+			}
+		}
+
+		$this->import_plugin_script(['price-format.js']);
 		$this->import_page_script('adjust-payslip.js');
-		$this->load->model('Employee_model', 'employee');
 		$this->generate_page('my-payslip/view', [
 			'payslip' => $this->payslip->get_by_employee($id, $employee_id),
-			'employee_data' => $this->employee->get($employee_id)
+			'employee_data' => $this->employee->get($employee_id),
+			'particulars' => $this->pay_modifier->all($emp_particulars)
 		]);
 	}
 

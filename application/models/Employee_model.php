@@ -121,7 +121,7 @@ class Employee_model extends CI_Model
         }
 
 
-        $result['particulars'] = $this->db->select('sp.amount, pm.type, pm.name, sp.particulars_id')
+        $result['particulars'] = $this->db->select('sp.amount, pm.type, pm.name, pm.particular_type, sp.particulars_id')
             ->from('salary_particulars AS sp')
             ->join('pay_modifiers AS pm', 'pm.id = sp.particulars_id')
             ->where( ['employee_id' => $id])
@@ -195,7 +195,7 @@ class Employee_model extends CI_Model
 
     public function get_position($id)
     {
-        $this->db->select('p.name, p.id')->from('employee_positions AS emppos, positions AS p');
+        $this->db->select('p.name, p.id, p.workday')->from('employee_positions AS emppos, positions AS p');
         $this->db->where('p.id = emppos.position_id');
         $this->db->where('emppos.`to` IS NULL', FALSE, FALSE)->where('emppos.employee_id', $id);
         return $this->db->get()->row_array();
@@ -305,8 +305,7 @@ class Employee_model extends CI_Model
 
         $this->db->select('a.*, ar.type, ar.custom_type_name')
             ->from('employee_attendance AS a')
-            ->join('employee_requests AS ar', 'ar.id = a.request_id', 'left')
-            ->where('datetime_in IS NOT NULL AND datetime_out IS NOT NULL');
+            ->join('employee_requests AS ar', 'ar.id = a.request_id', 'left');
 
         if($id)
             $this->db->where('employee_id', $id);
@@ -330,15 +329,19 @@ class Employee_model extends CI_Model
         return $this->db->where('id', $id)->update($this->table);
     }
 
-    public function check_empty_attendance($id)
+    public function check_empty_attendance($id, $date = FALSE)
     {
         $this->db->select('id, datetime_in');
-        $id = $this->db->get_where("employee_attendance", array("id"=>$id, "datetime_out"=>NULL))->row_array();
+        
+        if($date)
+            $this->db->where('datetime_in <', $date);
+        $this->db->order_by("datetime_in", "desc");
+        $id = $this->db->get_where("employee_attendance", array("employee_id"=>$id, "datetime_out"=>NULL))->result_array();
 
         if($id)
             return $id;
         else
-            return NULL; 
+            return NULL;
     }
 
     public function update_employee_attendance($id, $datetime_out)
@@ -347,8 +350,24 @@ class Employee_model extends CI_Model
         return $this->db->where('id', $id)->update('employee_attendance');
     }
 
+    public function update_emp_att($data)
+    {
+        if(isset($data['datetime_in']))
+            $this->db->set('datetime_in', $data['datetime_in']);
+        if(isset($data['datetime_out']))
+            $this->db->set('datetime_out', $data['datetime_out']);
+
+        return $this->db->where('id', $data['id'])->update('employee_attendance');
+    }
+
     public function insert_employee_attendance($data)
     {
         return $this->db->insert('employee_attendance', $data);
+    }
+
+    public function get_employee_pay_particulars($id)
+    {
+        $this->db->select('particulars_id');
+        return $this->db->get_where('salary_particulars', ['employee_id'=>$id])->result_array();
     }
 }

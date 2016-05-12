@@ -1,4 +1,3 @@
-
 <?php $url = base_url('payslip')?>
 <section class="content-header">
   <h1>
@@ -34,7 +33,7 @@
         <!-- <div class=> -->
       </div><!-- /.box-body -->
       <div class="box-footer clearfix">
-        <a href="<?=$url?>" class="btn btn-default cancel pull-right btn-flat">Cancel</a>
+        <a href="<?= base_url('my_payslip');?>" class="btn btn-default cancel pull-right btn-flat">Cancel</a>
         <button type="submit" class="btn btn-success btn-flat">Submit</button>
       </div><!-- /.box-footer -->
     </form>

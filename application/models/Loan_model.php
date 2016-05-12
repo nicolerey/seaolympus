@@ -1,0 +1,52 @@
+<?php
+
+class Loan_model extends CI_Model
+{
+
+	protected $table = 'loans';
+
+	public function all($emp_id = FALSE, $loan_id = FALSE, $start_date = FALSE, $end_date = FALSE, $payment_start = FALSE, $payment_end = FALSE)
+	{
+		if($emp_id)
+			$this->db->where('employee_id', $emp_id);
+		if($loan_id)
+			$this->db->where('id', $loan_id);
+		if($start_date)
+			$this->db->where('loan_date>=', $start_date);
+		if($end_date)
+			$this->db->where('loan_date<=', $end_date);
+
+		$this->db->from($this->table);
+		$this->db->order_by('loan_date', 'desc');
+		$loans = $this->db->get()->result_array();
+
+		foreach ($loans as $key=>$value) {
+			if($payment_start)
+				$this->db->where('payment_date>=', $payment_start);
+			if($payment_end)
+				$this->db->where('payment_date<=', $payment_end);
+			$this->db->where('loan_id', $value['id']);
+			$this->db->from('payment_terms');
+			$loans[$key]['payment_terms'] = $this->db->get()->result_array();
+		}
+
+		return $loans;
+	}
+
+	public function create($data)
+	{
+		$loan_table_data = [
+			'employee_id' => $data['employee_number'],
+			'loan_amount' => $data['loan_amount']
+		];
+		$this->db->insert('loans', $loan_table_data);
+
+		$loan_id = $this->db->insert_id();
+		foreach ($data['payment_terms'] as $key=>$value) {
+			$data['payment_terms'][$key]['loan_id'] = $loan_id;
+		}
+		$this->db->insert_batch('payment_terms', $data['payment_terms']);
+
+		return $this->db->insert_batch('payment_terms', $data['payment_terms']);
+	}
+}

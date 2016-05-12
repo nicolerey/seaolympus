@@ -52,23 +52,18 @@
                     <a href="<?= "{$url}pay_modifiers" ?>"><i class="fa fa-cubes"></i> <span>Pay Particulars</span></a>
                 </li>
 
-                <li class="<?= $active_nav === NAV_PAYSLIP ? 'active' : '' ?>">
-                    <a href="<?= "{$url}payslip" ?>"><i class="fa fa-sticky-note"></i> <span> Payslip</span></a>
+                <li class="<?= $active_nav === NAV_MY_PAYSLIP ? 'active' : '' ?>">
+                    <a href="<?= "{$url}my_payslip" ?>"><i class="fa fa-sticky-note"></i> <span> Payslips</span></a>
                 </li>
+
                 <li class="<?= $active_nav === NAV_VIEW_ATTENDANCE? 'active' : '' ?>">
                     <a href="<?= "{$url}attendance/view" ?>"><i class="fa fa-calendar"></i> <span> Attendance</span></a>
                 </li>
+
+                <li class="<?= $active_nav === NAV_LOANS ? 'active' : '' ?>">
+                    <a href="<?= "{$url}loan" ?>"><i class="fa fa-usd"></i> <span> Loans</span></a>
+                </li>
            <?php endif;?>
-
-
-            <li class="<?= $active_nav === NAV_MY_PAYSLIP ? 'active' : '' ?>">
-                <a href="<?= "{$url}my_payslip" ?>"><i class="fa fa-sticky-note"></i> <span> View Payslips</span></a>
-            </li>
-
-            
-
-            
-
         </ul><!-- /.sidebar-menu -->
     </section>
     <!-- /.sidebar -->

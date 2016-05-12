@@ -1,6 +1,5 @@
 (function($){
 	$(document).ready(function(){
-
 		var url = $('[data-name=attendance-url]').data('value');
 
 		function addEvent(obj, name, func){

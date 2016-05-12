@@ -22,56 +22,127 @@
             <input type="text" class="form-control" name="name" value="<?= preset($data, 'name', '')?>" />
           </div>
         </div>
-        <div class="form-group">
-          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Attendance type</label>
-          <div class="col-sm-5">
-            <?= form_dropdown('attendance_type', ['' => '', 're' => 'Regular Employee', 'fl' => 'Flexible Employee'], preset($data, 'attendance_type', ''), 'class="form-control" onChange="AttendanceTypeFunc(this.value)"')?>
-          </div>
-        </div>
         <hr>
         <div class="form-group">
-          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Work days</label>
-          <div class="col-sm-8">
-            <?php for($workday_counter=1; $workday_counter<8; $workday_counter++){ ?>
-              <label class="checkbox-inline">
-                <input type="checkbox" name="workday[]" value="<?= $workday_counter?>"<?= ($data['workday']!=NULL) ? ((in_array($workday_counter, json_decode($data['workday']))) ? " checked" : "") : "";?>/> 
-                <?= $days[$workday_counter]?>
-              </label>
-            <?php }?>
+          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Work days</label>         
+          <div class="col-sm-10">
+            <table class="table workday_container">
+              <tbody class="workday_field hidden">
+                <tr>
+                  <td class="col-sm-4" rowspan="2" style="vertical-align: middle;">
+                    <div class="col-sm-6">
+                      <select class="form-control from_day_field">
+                        <option value="">Select work day</option>
+                        <?php foreach($days as $index=>$day):?>
+                            <option value="<?= $index;?>"><?= substr($day, 0, 3);?></option>
+                        <?php endforeach;?>
+                      </select>
+                    </div>
+                    <div class="col-sm-6">              
+                      <select class="form-control to_day_field">
+                        <option value="">Select work day</option>
+                        <?php foreach($days as $index=>$day):?>
+                            <option value="<?= $index;?>"><?= substr($day, 0, 3);?></option>
+                        <?php endforeach;?>
+                      </select>
+                    </div>
+                  </td>
+                  <td class="col-sm-1 text-right">
+                    <label class="control-label">1st half</label>
+                  </td>
+                  <td class="col-sm-3">
+                    <div class="col-sm-6">
+                      <input type="text" value="" class="form-control timepicker from_time_field" placeholder="Work time"/>
+                    </div>
+                    <div class="col-sm-6">
+                      <input type="text" value="" class="form-control timepicker to_time_field" placeholder="Work time"/>
+                    </div>
+                  </td>
+                  <td class="col-sm-1" rowspan="2" style="vertical-align: middle;">
+                    <button type="button" class="btn btn-flat btn-danger" onclick="delete_workday_group(this);">
+                      <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="col-sm-1 text-right">
+                    <label class="control-label">2nd half</label>
+                  </td>
+                  <td class="col-sm-3">
+                    <div class="col-sm-6">
+                      <input type="text" value="" class="form-control timepicker from_time_field" placeholder="Work time"/>
+                    </div>
+                    <div class="col-sm-6">
+                      <input type="text" value="" class="form-control timepicker to_time_field" placeholder="Work time"/>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+              <?php if(!empty($data['workday'])):?>
+                <?php foreach(json_decode($data['workday']) as $value):?>
+                  <tbody class="workday_field">
+                    <tr>
+                      <td class="col-sm-4" rowspan="2" style="vertical-align: middle;">
+                        <div class="col-sm-6">
+                          <select class="form-control from_day_field" name="from_day[]">
+                            <option value="">Select work day</option>
+                            <?php foreach($days as $index=>$day):?>
+                                <option value="<?= $index;?>"<?= ($value->from_day==$index)?" selected":""; ?>><?= substr($day, 0, 3);?></option>
+                            <?php endforeach;?>
+                          </select>
+                        </div>
+                        <div class="col-sm-6">              
+                          <select class="form-control to_day_field" name="to_day[]">
+                            <option value="">Select work day</option>
+                            <?php foreach($days as $index=>$day):?>
+                                <option value="<?= $index;?>"<?= ($value->to_day==$index)?" selected":""; ?>><?= substr($day, 0, 3);?></option>
+                            <?php endforeach;?>
+                          </select>
+                        </div>
+                      </td>
+                      <td class="col-sm-1 text-right">
+                        <label class="control-label">1st half</label>
+                      </td>
+                      <td class="col-sm-3">
+                        <div class="col-sm-6">
+                          <input type="text" value="<?= $value->time->from_time_1;?>" class="form-control timepicker from_time_field" placeholder="Work time" name="from_time_1[]"/>
+                        </div>
+                        <div class="col-sm-6">
+                          <input type="text" value="<?= $value->time->to_time_1;?>" class="form-control timepicker to_time_field" placeholder="Work time" name="to_time_1[]"/>
+                        </div>
+                      </td>
+                      <td class="col-sm-1" rowspan="2" style="vertical-align: middle;">
+                        <button type="button" class="btn btn-flat btn-danger" onclick="delete_workday_group(this);">
+                          <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col-sm-1 text-right">
+                        <label class="control-label">2nd half</label>
+                      </td>
+                      <td class="col-sm-3">
+                        <div class="col-sm-6">
+                          <input type="text" value="<?= $value->time->from_time_2;?>" class="form-control timepicker from_time_field" placeholder="Work time" name="from_time_2[]"/>
+                        </div>
+                        <div class="col-sm-6">
+                          <input type="text" value="<?= $value->time->to_time_2;?>" class="form-control timepicker to_time_field" placeholder="Work time" name="to_time_2[]"/>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                <?php endforeach;?>
+              <?php endif;?>
+            </table>
           </div>
         </div>
-
-        <div class="flexible_time_fields"<?= (isset($data['attendance_type']) && $data['attendance_type']!="fl")?"style=display:none;":"";?> >
-          <div class="form-group">
-            <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Required work hours</label>
-            <div class="col-sm-3">
-              <input class="form-control" value="" step="0.01" min="0" name="required_work_hours"/>
-            </div>
-          </div>
-        </div>
-
-        <div class="regular_time_fields"<?= (isset($data['attendance_type']) && $data['attendance_type']=="fl")?"style=display:none;":"";?> >
-          <div class="form-group">
-            <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Time (AM)</label>
-            <div class="col-sm-3">
-              <input type="text" name="hour_of_day_start_am" value="<?= display_time($data, 'hour_of_day_start_am')?>" class="form-control timepicker"/>
-              <span class="help-block">In</span>
-            </div>
-            <div class="col-sm-3">
-              <input type="text" name="hour_of_day_end_am" value="<?= display_time($data, 'hour_of_day_end_am')?>" class="form-control timepicker"/>
-              <span class="help-block">Out</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Time (PM)</label>
-            <div class="col-sm-3">
-              <input type="text" name="hour_of_day_start_pm" value="<?= display_time($data, 'hour_of_day_start_pm')?>" class="form-control timepicker"/>
-              <span class="help-block">In</span>
-            </div>
-            <div class="col-sm-3">
-              <input type="text" name="hour_of_day_end_pm" value="<?= display_time($data, 'hour_of_day_end_pm')?>" class="form-control timepicker"/>
-              <span class="help-block">Out</span>
-            </div>
+        
+        <div class="form-group">
+          <div class="col-sm-10"></div>
+          <div class="col-sm-1">
+            <button type="button" class="btn btn-flat btn-success" onclick="add_workday(this);">
+              <span class="glyphicon glyphicon-plus"></span> Add work day
+            </button>
           </div>
         </div>
 
@@ -85,14 +156,22 @@
 </section>
 
 <script>
-function AttendanceTypeFunc(attendance_type_value){
-  if(attendance_type_value=="fl"){
-    $('.flexible_time_fields').show();
-    $('.regular_time_fields').hide();
+  function add_workday(element){
+    var workday_group = $('.workday_field').first().clone().removeClass('hidden');
+
+    workday_group.find('.timepicker').timepicker({'defaultTime':false});
+    workday_group.find('.from_day_field').attr('name', 'from_day[]');
+    workday_group.find('.to_day_field').attr('name', 'to_day[]');
+
+    workday_group.find('.from_time_field').first().attr('name', 'from_time_1[]');
+    workday_group.find('.to_time_field').first().attr('name', 'to_time_1[]');
+    workday_group.find('.from_time_field').last().attr('name', 'from_time_2[]');
+    workday_group.find('.to_time_field').last().attr('name', 'to_time_2[]');
+
+    $('.workday_container').append(workday_group);
   }
-  else if(attendance_type_value=="re"){
-    $('.flexible_time_fields').hide();
-    $('.regular_time_fields').show();
+  
+  function delete_workday_group(element){
+    $(element).closest('.workday_field').remove();
   }
-}
 </script>

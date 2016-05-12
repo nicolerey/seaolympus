@@ -124,49 +124,60 @@ class positions extends HR_Controller
 		}else{
 			$this->form_validation->set_rules('name', 'position name', 'required|callback__validate_position_name');
 		}
-		$this->form_validation->set_rules('attendance_type', 'attendance type', 'required|in_list[re,fl]', [
-			'in_list' => 'Please provide a valid %s.'
-		]);
+		
+		$this->form_validation->set_rules('from_day[]', 'starting work day', 'required');
+		$this->form_validation->set_rules('to_day[]', 'ending work day', 'required');
 
-		if($this->input->post('attendance_type')=="re"){
-			$this->fields += [
-				['name' => 'hour_of_day_start_am', 'label' => 'time in (AM)', 'rules' => 'required|callback__validate_am_time_in'],
-				['name' => 'hour_of_day_start_pm', 'label' => 'time in (PM)', 'rules' => 'required|callback__validate_pm_time_in'],
-				['name' => 'hour_of_day_end_am', 'label' => 'time out (AM)', 'rules' => 'required|callback__validate_am_time_out'],
-				['name' => 'hour_of_day_end_pm', 'label' => 'time out (PM)', 'rules' => 'required|callback__validate_pm_time_out']
-			];
-		}
-		else if($this->input->post('attendance_type')=="fl"){
-			$this->fields += [
-				['name' => 'required_work_hours', 'label' => 'required work hours', 'rules' => 'required|is_natural']
-			];
-		}
-
-		foreach($this->fields AS $field){
-			$this->form_validation->set_rules($field['name'], $field['label'], $field['rules']);
-		}
+		$this->form_validation->set_rules('from_time_1[]', 'starting work time', 'required');
+		$this->form_validation->set_rules('to_time_1[]', 'ending work time', 'required');
+		$this->form_validation->set_rules('from_time_2[]', 'starting work time', 'required');
+		$this->form_validation->set_rules('to_time_2[]', 'ending work time', 'required');
 	}
 
 	public function _format_data($mode)
 	{
 		$input = $this->input->post();
-		$data = elements(['name', 'attendance_type'], $this->input->post());
-		if($input['attendance_type']=="re"){
-			$data += [
-				'hour_of_day_start_am' => date_create($input['hour_of_day_start_am'])->format('H:i'),
-				'hour_of_day_end_am' => date_create($input['hour_of_day_end_am'])->format('H:i'),
-				'hour_of_day_start_pm' => date_create($input['hour_of_day_start_pm'])->format('H:i'),
-				'hour_of_day_end_pm' => date_create($input['hour_of_day_end_pm'])->format('H:i')
+		$data = elements(['name'], $this->input->post());
+		
+		$workday = [];
+		for ($x=0; $x<count($input['from_day']); $x++) {
+			$workday[$x] = [
+				'from_day' => $input['from_day'][$x],
+				'to_day' => $input['to_day'][$x],
+				'time' => [
+					'from_time_1' => $input['from_time_1'][$x],
+					'to_time_1' => $input['to_time_1'][$x],
+					'from_time_2' => $input['from_time_2'][$x],
+					'to_time_2' => $input['to_time_2'][$x]
+				],
+				'time_breakdown' => [
+					$input['from_day'][$x] => [],
+					$input['to_day'][$x] => []
+				]
 			];
-		}
-		else if($input['attendance_type']=="fl"){
-			$data += [
-				'work_hours' => $input['required_work_hours']
-			];
-		}
 
+			if($input['from_day'][$x]!=$input['to_day'][$x]){
+				$time_difference_1 = $input['to_time_1'][$x] - $input['from_time_1'][$x];
+				if($time_difference_1<0){
+					array_push($workday[$x]['time_breakdown'][$input['from_day'][$x]], [$input['from_time_1'][$x], '12:00 AM']);
+					array_push($workday[$x]['time_breakdown'][$input['to_day'][$x]], ['12:00 AM', $input['to_time_1'][$x]]);
+				}
+				else
+					array_push($workday[$x]['time_breakdown'][$input['from_day'][$x]], [$input['from_time_1'][$x], $input['to_time_1'][$x]]);
+
+				$time_difference_2 = $input['to_time_2'][$x] - $input['from_time_2'][$x];
+				if($time_difference_2<0){
+					array_push($workday[$x]['time_breakdown'][$input['from_day'][$x]], [$input['from_time_2'][$x], '12:00 AM']);
+					array_push($workday[$x]['time_breakdown'][$input['to_day'][$x]], ['12:00 AM', $input['to_time_2'][$x]]);
+				}
+				else
+					array_push($workday[$x]['time_breakdown'][$input['to_day'][$x]], [$input['from_time_2'][$x], $input['to_time_2'][$x]]);
+			}
+		}
+		
 		$data += [
-			'workday' => json_encode($input['workday'])
+			'attendance_type' => 're',
+			'workday' => json_encode($workday)
 		];
 
 		return $data;
@@ -182,61 +193,5 @@ class positions extends HR_Controller
 	{
 		$this->form_validation->set_message('_validate_workday', 'Please select %s.');
 		return in_array($val, array_keys($this->days));
-	} 
-
-	public function _validate_am_time_in($val)
-	{
-		$this->form_validation->set_message('_validate_am_time_in', "Please enter a valid %s. ({$val})");
-		if(!is_valid_date($val, 'g:i A')){
-			return FALSE;
-		}
-		$from = date_create('00:00');
-		$time = date_create($val);
-		return ($time >= $from);
 	}
-
-	public function _validate_am_time_out($val)
-	{
-		$this->form_validation->set_message('_validate_am_time_out', "Please enter a valid %s. ({$val})");
-		if(!is_valid_date($val, 'g:i A')){
-			return FALSE;
-		}
-		$from = date_create($this->input->post('hour_of_day_start_am'));
-		$time = date_create($val);
-		return ($time >= $from);
-	}
-
-	public function _validate_pm_time_in($val)
-	{
-		$this->form_validation->set_message('_validate_pm_time_in', "Please enter a valid %s. ({$val})");
-		if(!is_valid_date($val, 'g:i A')){
-			return FALSE;
-		}
-		$from = date_create($this->input->post('hour_of_day_end_am'));
-		$time = date_create($val);
-		return ($time >= $from);
-	}
-
-	public function _validate_pm_time_out($val)
-	{
-		$this->form_validation->set_message('_validate_pm_time_out', "Please enter a valid %s. ({$val})");
-		if(!is_valid_date($val, 'g:i A')){
-			return FALSE;
-		}
-		$from = date_create($this->input->post('hour_of_day_start_pm'));
-		$to = date_create('23:59');
-		$time = date_create($val);
-		return ($time >= $from) && ($time <= $to);
-	}
-
-	public function sample()
-	{
-		$a = date_create('8:00 AM');
-		$b = date_create('00:00');
-		$c = date_create('12:00');
-		echo ($a >= $b) && ($a <= $c);
-		echo "";
-	}
-
-
 }

@@ -10,8 +10,11 @@ class Pay_modifier_model extends CI_Model
 		parent::__construct();
 	}
 
-	public function all()
+	public function all($filter_result = FALSE)
 	{
+		if($filter_result)
+			$this->db->where_not_in('id', $filter_result);
+
 		$this->db->order_by('name', 'ASC');
 		return $this->db->get($this->table)->result_array();
 	}

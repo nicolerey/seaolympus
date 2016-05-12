@@ -19,6 +19,8 @@
     <?= css('skins/skin-red.min.css')?>
     <link rel="stylesheet" href="<?= base_url('assets/plugins/bootstrap-datepicker/css/bootstrap-datepicker3.min.css')?>"/>
     <link rel="stylesheet" href="<?= base_url('assets/plugins/bootstrap-timepicker/bootstrap-timepicker.min.css')?>"/>
+    <link rel="stylesheet" href="<?= base_url('assets/plugins/bootstrap-datetimepicker-smalot/css/bootstrap-datetimepicker.min.css')?>"/>
+    <link rel="stylesheet" href="<?= base_url('assets/plugins/x_editable/bootstrap3-editable/css/bootstrap-editable.css')?>"/>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->

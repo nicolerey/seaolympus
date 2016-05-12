@@ -8,7 +8,7 @@ class Attendance extends HR_Controller
 	public function __construct()
 	{
 		parent::__construct();
-		$this->load->model(['Employee_model' => 'employee', 'Payslip_model' => 'payslip']);
+		$this->load->model(['Employee_model' => 'employee', 'Payslip_model' => 'payslip', 'Position_model' => 'position']);
 		$this->active_nav = '';
 	}
 
@@ -52,8 +52,8 @@ class Attendance extends HR_Controller
 		return $this->logged_employee !== NULL;
 	}
 
-	public function view()
-	{
+	public function view($upload_status = FALSE)
+	{		
 		$this->active_nav = NAV_VIEW_ATTENDANCE;
 		$data = [];
 		$test=  [];
@@ -74,46 +74,39 @@ class Attendance extends HR_Controller
 		if(!empty($range['employee_number'])){
 			if($this->employee->exists($range['employee_number'])){
 				$emp_result = $this->employee->attendance($range['employee_number'], $start_date, $end_date);
-				//$test = $this->payslip->calculate($range['employee_number'], $start_date, $end_date, TRUE);
 			}
 		}
-		else{
+		else
 			$emp_result = $this->employee->attendance();
-		}
 
 		if($emp_result){
 			$x = 0;
 			foreach ($emp_result as $attendance) {
 				$name = $this->employee->get_employee_name($attendance['employee_id']);
+				$data[$x]['emp_attendance_id'] = $attendance['id'];
 				$data[$x]['name'] = $name['firstname']." ".$name['middleinitial']." ".$name['lastname'];
-				$data[$x]['date'] = date_format(date_create($attendance['datetime_in']), 'Y-m-d');
-				$data[$x]['in'] = date_format(date_create($attendance['datetime_in']), 'h:i A');
-				$data[$x]['out'] = date_format(date_create($attendance['datetime_out']), 'h:i A');
-				$data[$x]['total_hours'] = number_format(((date_format(date_create($data[$x]['out']), 'i')/60) + (date_format(date_create($data[$x]['out']), 'H'))) - ((date_format(date_create($data[$x]['in']), 'i')/60) + (date_format(date_create($data[$x]['in']), 'H'))), 2);
+				$data[$x]['datetime_in'] = ($attendance['datetime_in']) ? date_format(date_create($attendance['datetime_in']), 'Y-m-d h:i A') : NULL;
+				$data[$x]['datetime_out'] = ($attendance['datetime_out']) ? date_format(date_create($attendance['datetime_out']), 'Y-m-d h:i A') : NULL;
+				$data[$x]['total_hours'] = number_format(($attendance['datetime_out'])?(((date_format(date_create($data[$x]['datetime_out']), 'i')/60) + (date_format(date_create($data[$x]['datetime_out']), 'H'))) - ((date_format(date_create($data[$x]['datetime_in']), 'i')/60) + (date_format(date_create($data[$x]['datetime_in']), 'H')))):0, 2);
 
 				$x++;
 			}
 		}
 
-		$this->import_plugin_script(['bootstrap-datepicker/js/bootstrap-datepicker.min.js']);
+		$this->import_plugin_script(['bootstrap-datepicker/js/bootstrap-datepicker.min.js', 'x_editable/bootstrap3-editable/js/bootstrap-editable.min.js', 'bootstrap-datetimepicker-smalot/js/bootstrap-datetimepicker.min.js', 'moment.js']);
 		$this->import_page_script(['view-attendance.js']);
-		$this->generate_page('attendance/view', compact(['data', 'search_employee', 'test']));
+		$this->generate_page('attendance/view', array('data'=>$data, 'search_employee'=>$search_employee, 'test'=>$test, 'upload_status'=>$upload_status));
 	}
 
 	public function upload_attendance(){
 		$config['upload_path']   = './assets/uploads/'; 
 		$config['allowed_types'] = 'txt';
 		$this->load->library('upload', $config);
+		$u_status = 0;
 
-		if (!$this->upload->do_upload('userfile')) {
-			/*$error = array('error' => $this->upload->display_errors()); 
-			$this->load->view('upload_form', $error);*/ 
-			echo $this->upload->display_errors();
-		}
-		else { 
-			/*$data = array('upload_data' => $this->upload->data()); 
-			$this->load->view('upload_success', $data);*/
-
+		if (!$this->upload->do_upload('userfile'))
+			$u_status = 2;
+		else {
 			$file_info = $this->upload->data();
 
 			$this->load->helper('file');
@@ -122,34 +115,71 @@ class Attendance extends HR_Controller
 
 			$row = explode("\n", $string);
 			unset($row[0]);
-			$data = [];
-			foreach ($row as $key=>$value) {
+
+			foreach ($row as $value) {
 				$col_val = explode("\t", $value);
+				$insert_flag = 1;
 
 				if(isset($col_val[2]) && isset($col_val[9])){
-					$id = intval($col_val[2]);
-					$attendance_result = $this->employee->check_empty_attendance($id);
-					$bio_in = new DateTime(trim($col_val[9]));
+					$bio_id = $col_val[2];
+					$bio_datetime = new DateTime(trim($col_val[9]));
 
-					echo "<pre>";
-					print_r($attendance_result);
-					//print_r($bio_in);
-					echo "</pre>";
-
-					/*if($attendance_result){
-						$att_in = new DateTime($attendance_result['datetime_in']);
-						if($bio_in->format("Y-m-d")==$att_in->format("Y-m-d"))
-							$this->employee->update_employee_attendance($att_in, $bio_in);
-						else{
-
+					$emp_id = $this->employee->get_by_uid($bio_id);
+					if($emp_id){
+						$attendance_result = $this->employee->check_empty_attendance($emp_id['id'], $bio_datetime->format('Y-m-d H:i:s'));
+						if($attendance_result){
+							foreach($attendance_result as $att_result){
+								$date_difference = date_diff(date_create(trim($col_val[9])), date_create($att_result['datetime_in']));
+								if($date_difference->days<2 && $date_difference->invert==1){
+									$this->employee->update_employee_attendance($att_result['id'], $bio_datetime->format('Y-m-d H:i:s'));
+									$insert_flag = 0;
+									break;
+								}
+							}
+						}
+						
+						if($insert_flag){
+							$this->employee->insert_employee_attendance(['employee_id'=>$emp_id['id'], 'datetime_in'=>$bio_datetime->format('Y-m-d H:i:s')]);
 						}
 					}
-					else
-						$this->employee->insert_employee_attendance(['employee_id'=>$id, 'datetime_in'=>$bio_in]);*/
 				}
 			}
 
 			unlink('./assets/uploads/'.$file_info['file_name']);
+
+			$u_status = 1;
+
+			$this->view($u_status);
 		}
+	}
+
+	public function save_datetime()
+	{
+		$data = [];
+		$input = $this->input->post();
+		$data['id'] = $input['pk'];
+		if($input['name']=='datetime_in'){
+			// save datetime_out
+			$data['datetime_in'] = date_format(date_create($input['value']), 'Y-m-d H:i:s');
+		}
+		else{
+			// save datetime_in
+			$data['datetime_out'] = date_format(date_create($input['value']), 'Y-m-d H:i:s');
+		}
+
+		if($this->employee->update_emp_att($data)){
+			$this->output->set_output(json_encode([
+				'status' => 'ok',
+				'msg' => 'Value updated successfuly.'
+			]));
+		}
+		else{
+			$this->output->set_output(json_encode([
+				'status' => 'error',
+				'msg' => 'Value updated unsuccessfuly.'
+			]));
+		}
+
+		return;
 	}
 }

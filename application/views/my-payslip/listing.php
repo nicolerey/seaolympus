@@ -1,6 +1,7 @@
 <section class="content-header">
   <h1>
     My Payslips
+    <a class="btn btn-flat btn-default pull-right btn-sm" href="<?= base_url('payslip')?>"><i class="fa fa-plus"></i> Generate payslip</a>
   </h1>
 </section>
 <section class="content">
