@@ -12,7 +12,8 @@ class Payslip_model extends CI_Model
 		$employee_data = $this->employee->get($employee_id);
 		$position = $this->position->get($employee_data['position_id']);
 
-		$attendance = $this->employee->get_attendance($employee_id, $from, $to);
+		$upload_batch_id = $this->employee->get_batch_id();
+		$attendance = $this->employee->get_attendance($employee_id, $from, $to, $upload_batch_id-1);
 		if(!$attendance){
 			return [];
 		}
@@ -51,9 +52,9 @@ class Payslip_model extends CI_Model
 				}
 
 				$workday_index = $this->search_for_day_in_workday($pos_workday, $day_in);
-				echo "<pre>";
+				/*echo "<pre>";
 				print_r($workday_index);
-				echo "</pre><br><br>";
+				echo "</pre><br><br>";*/
 				if(!empty($workday_index)){
 					foreach ($workday_index as $key => $value) {
 						$late = 0;
@@ -175,50 +176,6 @@ class Payslip_model extends CI_Model
 								}
 							}
 
-							if($emp_att_flag){
-								array_push($emp_att, [
-									'start_date' => $start_date,
-									'end_date' => $end_date,
-									'workday_index' => $value,
-									'total_late' => $late,
-									'total_first_hours' => $am_workhours,
-									'total_second_hours' => $pm_workhours,
-									'total_working_hours' => $workhours
-								]);
-							}
-
-							echo "<pre>";
-							print_r($datetime_in);
-							print_r($datetime_out);
-							print_r($emp_att);
-							echo "</pre><br><br>";
-
-							break;
-						}
-
-						/*$start_date = $date_in;
-						$end_date = $date_in;
-						if($pos_workday[$value]['from_day']!=$pos_workday[$value]['to_day'] && !$am_flag)
-							$end_date = date_format(date_modify(date_create($end_date), "+1 day"), 'Y-m-d');
-						else if($pos_workday[$value]['from_day']!=$pos_workday[$value]['to_day'] && $am_flag)
-							$start_date = date_format(date_modify(date_create($start_date), "-1 day"), 'Y-m-d');
-
-						if($att_flag){
-							$emp_att_flag = 1;
-							if(!empty($emp_att)){
-								foreach($emp_att as $emp_att_index=>$emp_att_value){
-									if(($emp_att_value['start_date']==$start_date && $emp_att_value['end_date']==$end_date) && $emp_att_value['workday_index']==$value){
-										$emp_att[$emp_att_index]['total_late'] += $late;
-										$emp_att[$emp_att_index]['total_first_hours'] += $am_workhours;
-										$emp_att[$emp_att_index]['total_second_hours'] += $pm_workhours;
-										$emp_att[$emp_att_index]['total_working_hours'] += $workhours;
-
-										$emp_att_flag = 0;
-										break;
-									}
-								}
-							}
-
 							$emp_att_workday_start = date_format(date_create($start_date), 'N');
 							$emp_att_workday_end = date_format(date_create($end_date), 'N');
 							if($pos_workday[$value]['from_day']!=$emp_att_workday_start || $pos_workday[$value]['to_day']!=$emp_att_workday_end)
@@ -236,14 +193,14 @@ class Payslip_model extends CI_Model
 								]);
 							}
 
-							echo "<pre>";
+							/*echo "<pre>";
 							print_r($datetime_in);
 							print_r($datetime_out);
 							print_r($emp_att);
-							echo "</pre><br><br>";
-							
+							echo "</pre><br><br>";*/
+
 							break;
-						}*/
+						}
 					}
 				}
 			}
@@ -296,8 +253,10 @@ class Payslip_model extends CI_Model
 				if($value['total_late']<=$employee_data['allowed_late_period']){
 					$total_late_minutes += $value['total_late'];
 					$total_regular_hrs += $pos_workday[$value['workday_index']]['total_working_hours'];
-					$overtime_hours = $value['total_working_hours'] - $pos_workday[$value['workday_index']]['total_working_hours'];
-					$total_overtime_hrs += $overtime_hours;
+					if($value['total_working_hours']>$pos_workday[$value['workday_index']]['total_working_hours']){
+						$overtime_hours = $value['total_working_hours'] - $pos_workday[$value['workday_index']]['total_working_hours'];
+						$total_overtime_hrs += $overtime_hours;
+					}
 
 					$overtime_hrly = ($employee_data['daily_rate'] * $employee_data['overtime_rate']) / 100;
 					$data['regular_overtime_pay'] += round($overtime_hrly * $overtime_hours);
@@ -324,7 +283,7 @@ class Payslip_model extends CI_Model
 
 		$data['net_pay'] = $data['total_earnings'] + $data['total_additionals'] - $data['total_deductions'] - $data['total_late_deduction'];
 		
-		//return $data;
+		return $data;
 	}
 
 	public function get_date_difference($datetime_1, $datetime_2)
@@ -355,7 +314,7 @@ class Payslip_model extends CI_Model
 	{
 		$range = phase($month);
 		$payslip = $this->calculate($employee_number, $range[0], $range[1]);
-		/*if(is_numeric($payslip) || empty($payslip)){
+		if(is_numeric($payslip) || empty($payslip)){
 			return;
 		}
 		$data = [
@@ -391,7 +350,7 @@ class Payslip_model extends CI_Model
 
 		$this->db->trans_complete();
 
-		return $this->db->trans_status();*/
+		return $this->db->trans_status();
 	}
 
 	public function check($employee_id, $from, $to)

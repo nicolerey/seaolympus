@@ -41,11 +41,11 @@ class Payslip extends HR_Controller
 					$created++;
 				}
 			}
-			/*$this->session->set_flashdata('mass_payroll_status_complete', $created);
-			redirect('payslip');*/
+			$this->session->set_flashdata('mass_payroll_status_complete', $created);
+			redirect('payslip');
 		}
 
-		/*if(!$this->employee->exists($input['employee_number'])){
+		if(!$this->employee->exists($input['employee_number'])){
 			redirect('payslip');
 		}
 		
@@ -63,7 +63,7 @@ class Payslip extends HR_Controller
 			'from' =>  $range[0],
 			'to' =>  $range[1],
 			'month' => $input['month']
-		]);*/
+		]);
 	}
 
 
@@ -91,13 +91,13 @@ class Payslip extends HR_Controller
 					$salary_particular[] = [
 						'employee_id' => $employee_id,
 						'particulars_id' => $input['additional_name'][$key],
-						'amount' => $input['additional_particular_rate'][$key]
+						'amount' => floatval(str_replace(',', '', $input['additional_particular_rate'][$key]))
 					];
 					$payroll_particular[] = [
 						'payroll_id' => $payroll_id,
 						'particulars_id' => $input['additional_name'][$key],
 						'units' => $input['particular_units'][$key],
-						'amount' => $input['additional_particular_rate'][$key]
+						'amount' => floatval(str_replace(',', '', $input['additional_particular_rate'][$key]))
 					];
 				}
 			}
@@ -107,20 +107,20 @@ class Payslip extends HR_Controller
 					$salary_particular[] = [
 						'employee_id' => $employee_id,
 						'particulars_id' => $input['deduction_name'][$key],
-						'amount' => $input['deduction_particular_rate'][$key]
+						'amount' => floatval(str_replace(',', '', $input['deduction_particular_rate'][$key]))
 					];
 					$payroll_particular[] = [
 						'payroll_id' => $payroll_id,
 						'particulars_id' => $input['deduction_name'][$key],
 						'units' => 0,
-						'amount' => $input['deduction_particular_rate'][$key]
+						'amount' => floatval(str_replace(',', '', $input['deduction_particular_rate'][$key]))
 					];
 				}
 			}
 
 			$payroll_update = [
 				'current_daily_wage' => $input['basic_rate'],
-				'daily_wage_units' => $input['basic_rate_units'][0]
+				'daily_wage_units' => floatval(str_replace(',', '', $input['basic_rate_units'][0]))
 			];
 
 			$payroll_particulars_update = [];
@@ -132,7 +132,7 @@ class Payslip extends HR_Controller
 				$payroll_particulars_update[] = [
 					'particulars_id' => $value,
 					'units' => $unit,
-					'amount' => $input['particular_rate'][$key]
+					'amount' => floatval(str_replace(',', '', $input['particular_rate'][$key]))
 				];
 			}
 

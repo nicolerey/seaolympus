@@ -24,11 +24,12 @@ function calculate_payment_total(){
 	});
 
 	$('.payment_total').html(commaSeparateNumber(payment_total.toFixed(2)));
+	$('.input_payment_total').val(commaSeparateNumber(payment_total.toFixed(2)));
 }
 
 function commaSeparateNumber(val){
     while (/(\d+)(\d{3})/.test(val.toString())){
-      val = val.toString().replace(/(\d+)(\d{3})/, '$1'+', '+'$2');
+      val = val.toString().replace(/(\d+)(\d{3})/, '$1'+','+'$2');
     }
     return val;
 }
@@ -52,6 +53,7 @@ $(document).ready(function(){
 
 		$.post(that.data('action'), that.serialize())
 		.done(function(response){
+			console.log(response);
 			if(response.result){
 				window.location.href = $('.cancel').attr('href');
 				return;

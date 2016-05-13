@@ -72,7 +72,7 @@
                     <input type="number" class="form-control particular_unit" value="<?= $payslip['daily_wage_units'];?>" onchange="calculate_particular_amount(this, 0);" name="basic_rate_units[]"/>
                   </td>
                   <td class="particular_amount">
-                    0.00
+                    <?= number_format($payslip['current_daily_wage'] * $payslip['days_rendered'] * $payslip['daily_wage_units'], 2);?>
                   </td>
                 </tr>
                 <tr>
@@ -87,14 +87,10 @@
                 <?php if($payslip['particulars']['additionals']):?>
                   <?php foreach($payslip['particulars']['additionals'] as $additionals):?>
                     <?php
-                      if($additionals['type']=='d'){
+                      if($additionals['type']=='d')
                         $add_type = "Daily";
-                        $add_amount = $payslip['days_rendered'] * $additionals['amount'];
-                      }
-                      else{
+                      else
                         $add_type = "Monthly";
-                        $add_amount = $additionals['amount'];
-                      }
                     ?>
                     <tr>
                       <td></td>
@@ -109,7 +105,7 @@
                       <td class="particular_days_rendered"><?= $payslip['days_rendered'];?></td>
                       <td><input type="number" class="form-control particular_unit" name="units[]" value="<?= $additionals['units'];?>" onchange="calculate_particular_amount(this, 0);"/></td>
                       <td class="particular_amount">
-                        0.00
+                        <?= number_format($additionals['amount'] * $payslip['days_rendered'] * $additionals['units'], 2);?>
                       </td>
                     </tr>
                   <?php endforeach;?>
@@ -190,20 +186,16 @@
                     <?php foreach($payslip['particulars']['deductions'] as $key=>$deductions):?>
                       <?php if($key!=='loan'):?>
                         <?php
-                          if($deductions['type']=='d'){
+                          if($deductions['type']=='d')
                             $ded_type = "Daily";
-                            $ded_amount = $payslip['days_rendered'] * $deductions['amount'];
-                          }
-                          else{
+                          else
                             $ded_type = "Monthly";
-                            $ded_amount = $deductions['amount'];
-                          }
                         ?>
                         <tr>
                           <td></td>
                           <td><?= $deductions['name'];?></td>
                           <td>
-                            <input  min="0" step="0.01" value="<?= $ded_amount;?>" class="form-control pformat deduction_particular_amount" onchange="calculate_total_amount();"<?= ($key!=='loan')?'name="particular_rate[]"':'';?>/>
+                            <input  min="0" step="0.01" value="<?= $deductions['amount'];?>" class="form-control pformat deduction_particular_amount" onchange="calculate_total_amount();"<?= ($key!=='loan')?'name="particular_rate[]"':'';?>/>
                             <?php if($key!=='loan'):?>
                               <input type="hidden" name="particular_id[]" value="<?= $deductions['id']?>"/>
                             <?php endif;?>

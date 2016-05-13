@@ -60,7 +60,7 @@
                     <input type="text" class="form-control datepicker col-sm-1 loan_date_field" value=""/>
                   </td>
                   <td>
-                    <input min="0" step="0.01" value="0.00" class="form-control pformat loan_amount_field"/>
+                    <input min="0" step="0.01" value="0.00" class="form-control pformat loan_amount_field" onchange="calculate_payment_total();"/>
                   </td>
                 </tr>
                 <?php if(isset($loan)):?>
@@ -81,6 +81,7 @@
                 <td style="vertical-align: bottom;" class="payment_total">2000</td>
               </tbody>
             </table>
+            <input type="text" name="payment_total" class="input_payment_total hidden"/>
           </div>
         </div>
         <!-- /.box-body -->

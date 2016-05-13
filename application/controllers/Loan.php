@@ -88,7 +88,7 @@ class Loan extends HR_Controller
         	'title' => 'Make a loan',
         	'employees' => array_column($employees, 'fullname', 'id'),
         	'loan' => $loan[0],
-        	'action' => 'update'
+        	'action' => "update"
         ]);
 	}
 
@@ -129,6 +129,7 @@ class Loan extends HR_Controller
 
 	public function update()
 	{
+		$this->output->set_content_type('json');
 		$this->_perform_validation();
 		if(!$this->form_validation->run()){
 			$this->output->set_output(json_encode([
@@ -137,7 +138,6 @@ class Loan extends HR_Controller
 			]));
 			return;
 		}
-		print_r($this->input->post());
 		$input = $this->_format_data();
 		if($this->loan->update_loan($input)){
 			$this->output->set_output(json_encode(['result' => TRUE]));
@@ -157,6 +157,7 @@ class Loan extends HR_Controller
 		$this->form_validation->set_rules('loan_amount', 'loan amount', 'required|callback__validate_numeric');
 		$this->form_validation->set_rules('payment_date[]', 'payment date', 'required|callback__validate_date');
 		$this->form_validation->set_rules('payment_amount[]', 'payment amount', 'required|callback__validate_numeric');
+		$this->form_validation->set_rules('payment_total', 'payment total', 'matches[loan_amount]');
 	}
 
 	public function _format_data()

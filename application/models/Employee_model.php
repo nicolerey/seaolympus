@@ -201,8 +201,11 @@ class Employee_model extends CI_Model
         return $this->db->get()->row_array();
     }
 
-    public function get_attendance($id, $from, $to)
+    public function get_attendance($id, $from, $to, $upload_batch_id = FALSE)
     {
+        if($upload_batch_id)
+            $this->db->where('upload_batch', $upload_batch_id);
+
         $this->db->where("DATE(datetime_in) >= '{$from}' AND DATE(datetime_in) <= '{$to}'", FALSE, FALSE);
         $this->db->where('datetime_in IS NOT NULL AND datetime_out IS NOT NULL', FALSE, FALSE);
         return $this->db->get_where('employee_attendance', ['employee_id' => $id])->result_array();
@@ -300,7 +303,7 @@ class Employee_model extends CI_Model
         return $this->db->get_where('employee_attendance', ['id' => $id])->row_array();
     }
 
-    public function attendance($id = FALSE, $start_date = FALSE, $end_date = FALSE)
+    public function attendance($id = FALSE, $start_date = FALSE, $end_date = FALSE, $upload_batch_id = FALSE)
     {
 
         $this->db->select('a.*, ar.type, ar.custom_type_name')
@@ -318,6 +321,9 @@ class Employee_model extends CI_Model
             $this->db->where('DATE(datetime_in) <=', $end_date);
         }
 
+        if($upload_batch_id)
+            $this->db->where('upload_batch', $upload_batch_id);
+
         $this->db->order_by("datetime_in", "desc");
 
         return $this->db->get()->result_array();
@@ -329,12 +335,16 @@ class Employee_model extends CI_Model
         return $this->db->where('id', $id)->update($this->table);
     }
 
-    public function check_empty_attendance($id, $date = FALSE)
+    public function check_empty_attendance($id, $date = FALSE, $upload_batch_id = FALSE)
     {
         $this->db->select('id, datetime_in');
         
         if($date)
             $this->db->where('datetime_in <', $date);
+
+        if($upload_batch_id)
+            $this->db->where('upload_batch', $upload_batch_id);
+
         $this->db->order_by("datetime_in", "desc");
         $id = $this->db->get_where("employee_attendance", array("employee_id"=>$id, "datetime_out"=>NULL))->result_array();
 
@@ -369,5 +379,16 @@ class Employee_model extends CI_Model
     {
         $this->db->select('particulars_id');
         return $this->db->get_where('salary_particulars', ['employee_id'=>$id])->result_array();
+    }
+
+    public function get_batch_id()
+    {
+        $this->db->select('upload_batch');
+        $this->db->order_by('upload_batch', 'desc');
+        $result = $this->db->get('employee_attendance')->row_array();
+        if($result)
+            return $result['upload_batch']+1;
+
+        return;
     }
 }
