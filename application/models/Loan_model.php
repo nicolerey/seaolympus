@@ -45,8 +45,32 @@ class Loan_model extends CI_Model
 		foreach ($data['payment_terms'] as $key=>$value) {
 			$data['payment_terms'][$key]['loan_id'] = $loan_id;
 		}
-		$this->db->insert_batch('payment_terms', $data['payment_terms']);
 
 		return $this->db->insert_batch('payment_terms', $data['payment_terms']);
+	}
+
+	public function update_loan($data)
+	{
+		$update_flag = 0;
+		$loan_table_data = [
+			'employee_id' => $data['employee_number'],
+			'loan_amount' => $data['loan_amount']
+		];
+		$this->db->where('id', $data['id']);
+		if($this->db->update($this->table, $loan_table_data))
+			$update_flag = 1;
+
+		$this->db->where('loan_id', $data['id']);
+		$this->db->delete('payment_terms');
+
+		$insert_flag = 0;
+		$loan_id = $data['id'];
+		foreach ($data['payment_terms'] as $key=>$value) {
+			$data['payment_terms'][$key]['loan_id'] = $loan_id;
+		}
+		if($this->db->insert_batch('payment_terms', $data['payment_terms']))
+			$insert_flag = 1;
+
+		return ($update_flag && $insert_flag)?TRUE:FALSE;
 	}
 }

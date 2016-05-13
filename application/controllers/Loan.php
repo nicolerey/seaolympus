@@ -69,7 +69,26 @@ class Loan extends HR_Controller
 		$this->import_page_script('create-loan.js');
         $this->generate_page('loan/create', [
         	'title' => 'Make a loan',
-        	'employees' => array_column($employees, 'fullname', 'id')
+        	'employees' => array_column($employees, 'fullname', 'id'),
+        	'action' => "store"
+        ]);
+	}
+
+	public function view($id)
+	{
+		$employees = $this->employee->all();
+		foreach($employees AS &$emp){
+			$emp['fullname'] = "{$emp['lastname']}, {$emp['firstname']} {$emp['middleinitial']} [{$emp['id']}]";
+		}
+		$loan = $this->loan->all(NULL, $id);
+
+		$this->import_plugin_script(['bootstrap-datepicker/js/bootstrap-datepicker.min.js', 'price-format.js']);
+		$this->import_page_script('create-loan.js');
+        $this->generate_page('loan/create', [
+        	'title' => 'Make a loan',
+        	'employees' => array_column($employees, 'fullname', 'id'),
+        	'loan' => $loan[0],
+        	'action' => 'update'
         ]);
 	}
 
@@ -108,6 +127,29 @@ class Loan extends HR_Controller
 		return;
 	}
 
+	public function update()
+	{
+		$this->_perform_validation();
+		if(!$this->form_validation->run()){
+			$this->output->set_output(json_encode([
+				'result' => FALSE,
+				'messages' => array_values($this->form_validation->error_array())
+			]));
+			return;
+		}
+		print_r($this->input->post());
+		$input = $this->_format_data();
+		if($this->loan->update_loan($input)){
+			$this->output->set_output(json_encode(['result' => TRUE]));
+			return;
+		}
+		$this->output->set_output(json_encode([
+			'result' => FALSE,
+			'messages' => ['Unable to make a loan. Please try again later.']
+		]));
+		return;
+	}
+
 	public function _perform_validation()
 	{
 		$this->form_validation->set_rules('loan_date', 'loan date', 'required|callback__validate_date');
@@ -123,15 +165,18 @@ class Loan extends HR_Controller
 		$loan_info += elements([
 			'loan_date',
 			'employee_number',
-			'loan_amount'
+			'loan_amount',
+			'id'
 		], $this->input->post(), NULL);
+
+		$loan_info['loan_amount'] = floatval(str_replace(',', '', $loan_info['loan_amount']));
 
 		$payment_date = $this->input->post('payment_date');
 		$payment_amount = $this->input->post('payment_amount');
 		if(count($payment_date)>0){
 			for($x=0; $x<count($payment_date); $x++){
 				$loan_info['payment_terms'][$x]['payment_date'] = date_format(date_create($payment_date[$x]), 'Y-m-d');
-				$loan_info['payment_terms'][$x]['payment_amount'] = $payment_amount[$x];
+				$loan_info['payment_terms'][$x]['payment_amount'] = floatval(str_replace(',', '', $payment_amount[$x]));
 			}
 		}
 

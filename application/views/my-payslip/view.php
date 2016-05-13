@@ -44,10 +44,6 @@
             <p class="form-control-static"><?= format_date($payslip['start_date'], 'd-M-Y'). ' - '. format_date($payslip['end_date'], 'd-M-Y')?></p>
           </div>
         </div>
-        <pre>
-        <?php print_r($payslip);?>
-        <?php //print_r($employee_data);?>
-        </pre>
         <hr/>
         <div class="row">
           <div class="col-md-12">
@@ -73,7 +69,7 @@
                   </td>
                   <td class="particular_days_rendered"><?= $payslip['days_rendered'];?></td>
                   <td>
-                    <input type="number" class="form-control particular_unit" value="0" onchange="calculate_particular_amount(this, 0);"/>
+                    <input type="number" class="form-control particular_unit" value="<?= $payslip['daily_wage_units'];?>" onchange="calculate_particular_amount(this, 0);" name="basic_rate_units[]"/>
                   </td>
                   <td class="particular_amount">
                     0.00
@@ -86,7 +82,7 @@
                   <td>-</td>
                   <td>-</td>
                   <td>-</td>
-                  <td><?= $payslip['overtime_pay'];?></td>
+                  <td class="particular_amount"><?= number_format($payslip['overtime_pay'], 2);?></td>
                 </tr>
                 <?php if($payslip['particulars']['additionals']):?>
                   <?php foreach($payslip['particulars']['additionals'] as $additionals):?>
@@ -102,16 +98,18 @@
                     ?>
                     <tr>
                       <td></td>
-                      <td><?= $additionals['name'];?></td>
+                      <td>
+                        <?= $additionals['name'];?>
+                        <input type="hidden" name="particular_id[]" value="<?= $additionals['id']?>"/>
+                      </td>
                       <td><?= $add_type;?></td>
                       <td>
-                        <input name="additional_particular_rate[]"  min="0" step="0.01" class="form-control pformat particular_rate" onchange="calculate_particular_amount(this, 0);" value="<?= $additionals['amount'];?>"/>
+                        <input name="particular_rate[]"  min="0" step="0.01" class="form-control pformat particular_rate" onchange="calculate_particular_amount(this, 0);" value="<?= $additionals['amount'];?>"/>
                       </td>
                       <td class="particular_days_rendered"><?= $payslip['days_rendered'];?></td>
-                      <td><input type="number" class="form-control particular_unit" name="units[]" value="0" onchange="calculate_particular_amount(this, 0);"/></td>
+                      <td><input type="number" class="form-control particular_unit" name="units[]" value="<?= $additionals['units'];?>" onchange="calculate_particular_amount(this, 0);"/></td>
                       <td class="particular_amount">
                         0.00
-                        <input type="hidden" name="particular_id[]" value="<?= $additionals['id']?>"/>
                       </td>
                     </tr>
                   <?php endforeach;?>
@@ -205,7 +203,7 @@
                           <td></td>
                           <td><?= $deductions['name'];?></td>
                           <td>
-                            <input  min="0" step="0.01" value="<?= $ded_amount;?>" class="form-control pformat deduction_particular_amount" onchange="calculate_total_amount();"<?= ($key!=='loan')?'name="particular_amount[]"':'';?>/>
+                            <input  min="0" step="0.01" value="<?= $ded_amount;?>" class="form-control pformat deduction_particular_amount" onchange="calculate_total_amount();"<?= ($key!=='loan')?'name="particular_rate[]"':'';?>/>
                             <?php if($key!=='loan'):?>
                               <input type="hidden" name="particular_id[]" value="<?= $deductions['id']?>"/>
                             <?php endif;?>
@@ -217,7 +215,7 @@
                           <tr>
                             <td></td>
                             <td>Loan Payment - <?= $loan['payment_date'];?></td>
-                            <td><input name="loan_payment_amount[]"  min="0" step="0.01" value="<?= $loan['payment_amount'];?>" class="form-control pformat loan_payment_amount" onchange="calculate_total_amount();"/></td>
+                            <td class="loan_payment_amount"><?= $loan['payment_amount'];?></td>
                           </tr>
                         <?php endforeach;?>
                       <?php endif;?>

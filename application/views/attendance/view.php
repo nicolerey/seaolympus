@@ -10,18 +10,14 @@
   <div class="box box-solid">
       <div class="box-body">
 
-        <?php if($upload_status==1):?>
-          <div class="alert alert-success">
+        <?php if(is_numeric($num = $this->session->flashdata('upload_status'))):?>
+          <div class="alert<?= ($num==1)?' alert-success':' alert-danger';?>">
             <ul class="list-unstyled">
-              <li>File upload was successful.</li>
-            </ul>
-          </div>
-        <?php endif;?>
-
-        <?php if($upload_status==2):?>
-          <div class="alert alert-danger">
-            <ul class="list-unstyled">
-              <li>File upload was NOT successful.</li>
+              <?php if($num==1):?>
+                <li>File upload was successful.</li>
+              <?php else:?>
+                <li>File upload was unsuccessful.</li>
+              <?php endif;?>
             </ul>
           </div>
         <?php endif;?>
@@ -69,16 +65,16 @@
                     <?= $attendance['name'];?>
                   </td>
                   <td>
-                    <a href="#" data-type="combodate" data-pk="<?= $attendance['emp_attendance_id'];?>" data-url="<?= base_url("attendance/save_datetime");?>" data-title="Select time in" class="editable_time" data-name="datetime_in">
+                    <a href="#" data-type="combodate" data-pk="<?= $attendance['emp_attendance_id'];?>" data-url="<?= base_url("attendance/save_datetime");?>" data-title="Select time in" class="editable_time time_in" data-name="datetime_in">
                       <?= ($attendance['datetime_in'])?$attendance['datetime_in']:"-"; ?>
                     </a>
                   </td>
                   <td>
-                    <a href="#" data-type="combodate" data-pk="<?= $attendance['emp_attendance_id'];?>" data-url="<?= base_url("attendance/save_datetime");?>" data-title="Select time out" class="editable_time" data-name="datetime_out">
+                    <a href="#" data-type="combodate" data-pk="<?= $attendance['emp_attendance_id'];?>" data-url="<?= base_url("attendance/save_datetime");?>" data-title="Select time out" class="editable_time time_out" data-name="datetime_out">
                       <?= ($attendance['datetime_out'])?$attendance['datetime_out']:"-"; ?>
                     </a>
                   </td>
-                  <td><?= $attendance['total_hours'];?> hrs</td>
+                  <td class="time_diff"><?= $attendance['total_hours'];?> hrs</td>
                 </tr>
               <?php endforeach;?>
             <?php endif;?>

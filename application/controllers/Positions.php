@@ -149,30 +149,24 @@ class positions extends HR_Controller
 					'to_time_1' => $input['to_time_1'][$x],
 					'from_time_2' => $input['from_time_2'][$x],
 					'to_time_2' => $input['to_time_2'][$x]
-				],
-				'time_breakdown' => [
-					$input['from_day'][$x] => [],
-					$input['to_day'][$x] => []
 				]
 			];
 
-			if($input['from_day'][$x]!=$input['to_day'][$x]){
-				$time_difference_1 = $input['to_time_1'][$x] - $input['from_time_1'][$x];
-				if($time_difference_1<0){
-					array_push($workday[$x]['time_breakdown'][$input['from_day'][$x]], [$input['from_time_1'][$x], '12:00 AM']);
-					array_push($workday[$x]['time_breakdown'][$input['to_day'][$x]], ['12:00 AM', $input['to_time_1'][$x]]);
-				}
-				else
-					array_push($workday[$x]['time_breakdown'][$input['from_day'][$x]], [$input['from_time_1'][$x], $input['to_time_1'][$x]]);
+			$workday_date1 = date_create(date('Y-m-d')." ".$input['from_time_1'][$x]);
+			$workday_date2 = date_create(date('Y-m-d')." ".$input['to_time_1'][$x]);
+			if(($input['to_time_1'][$x] - $input['from_time_1'][$x])<0)
+				$workday_date2 = date_modify($workday_date2, "+1 day");
+			$time_diff = date_diff($workday_date2, $workday_date1);
+			$workday[$x]['first_hours'] = $time_diff->h + ($time_diff->i / 60);
 
-				$time_difference_2 = $input['to_time_2'][$x] - $input['from_time_2'][$x];
-				if($time_difference_2<0){
-					array_push($workday[$x]['time_breakdown'][$input['from_day'][$x]], [$input['from_time_2'][$x], '12:00 AM']);
-					array_push($workday[$x]['time_breakdown'][$input['to_day'][$x]], ['12:00 AM', $input['to_time_2'][$x]]);
-				}
-				else
-					array_push($workday[$x]['time_breakdown'][$input['to_day'][$x]], [$input['from_time_2'][$x], $input['to_time_2'][$x]]);
-			}
+			$workday_date1 = date_create(date('Y-m-d')." ".$input['from_time_2'][$x]);
+			$workday_date2 = date_create(date('Y-m-d')." ".$input['to_time_2'][$x]);
+			if(($input['to_time_2'][$x] - $input['from_time_2'][$x])<0)
+				$workday_date2 = date_modify($workday_date2, "+1 day");
+			$time_diff = date_diff($workday_date2, $workday_date1);
+			$workday[$x]['second_hours'] = $time_diff->h + ($time_diff->i / 60);
+
+			$workday[$x]['total_working_hours'] = $workday[$x]['first_hours'] + $workday[$x]['second_hours'];
 		}
 		
 		$data += [

@@ -52,7 +52,7 @@ class Attendance extends HR_Controller
 		return $this->logged_employee !== NULL;
 	}
 
-	public function view($upload_status = FALSE)
+	public function view()
 	{		
 		$this->active_nav = NAV_VIEW_ATTENDANCE;
 		$data = [];
@@ -95,7 +95,7 @@ class Attendance extends HR_Controller
 
 		$this->import_plugin_script(['bootstrap-datepicker/js/bootstrap-datepicker.min.js', 'x_editable/bootstrap3-editable/js/bootstrap-editable.min.js', 'bootstrap-datetimepicker-smalot/js/bootstrap-datetimepicker.min.js', 'moment.js']);
 		$this->import_page_script(['view-attendance.js']);
-		$this->generate_page('attendance/view', array('data'=>$data, 'search_employee'=>$search_employee, 'test'=>$test, 'upload_status'=>$upload_status));
+		$this->generate_page('attendance/view', array('data'=>$data, 'search_employee'=>$search_employee, 'test'=>$test));
 	}
 
 	public function upload_attendance(){
@@ -104,8 +104,10 @@ class Attendance extends HR_Controller
 		$this->load->library('upload', $config);
 		$u_status = 0;
 
-		if (!$this->upload->do_upload('userfile'))
-			$u_status = 2;
+		if (!$this->upload->do_upload('userfile')){
+			$this->session->set_flashdata('upload_status', 0);
+			redirect('attendance/view');
+		}
 		else {
 			$file_info = $this->upload->data();
 
@@ -147,9 +149,8 @@ class Attendance extends HR_Controller
 
 			unlink('./assets/uploads/'.$file_info['file_name']);
 
-			$u_status = 1;
-
-			$this->view($u_status);
+			$this->session->set_flashdata('upload_status', 1);
+			redirect('attendance/view');
 		}
 	}
 

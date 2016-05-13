@@ -41,11 +41,11 @@ class Payslip extends HR_Controller
 					$created++;
 				}
 			}
-			$this->session->set_flashdata('mass_payroll_status_complete', $created);
-			redirect('payslip');
+			/*$this->session->set_flashdata('mass_payroll_status_complete', $created);
+			redirect('payslip');*/
 		}
 
-		if(!$this->employee->exists($input['employee_number'])){
+		/*if(!$this->employee->exists($input['employee_number'])){
 			redirect('payslip');
 		}
 		
@@ -63,15 +63,14 @@ class Payslip extends HR_Controller
 			'from' =>  $range[0],
 			'to' =>  $range[1],
 			'month' => $input['month']
-		]);
+		]);*/
 	}
 
 
 	public function adjust()
 	{
 		$input = $this->input->post();
-		print_r($input);
-		/*if(isset($input['additional_name']) || isset($input['deduction_name'])){
+		if(isset($input['additional_name']) || isset($input['deduction_name'])){
 			$this->_perform_validation();
 			if(!$this->form_validation->run()){
 				$this->output->set_output(json_encode([
@@ -84,13 +83,21 @@ class Payslip extends HR_Controller
 
 		if($input){
 			$employee_id = $input['employee_id'];
+			$payroll_id = $input['id'];
 			$salary_particular = [];
+			$payroll_particular = [];
 			if(isset($input['additional_name'])){
 				foreach ($input['additional_name'] as $key => $value) {
 					$salary_particular[] = [
 						'employee_id' => $employee_id,
 						'particulars_id' => $input['additional_name'][$key],
-						'amount' => $input['particular_rate'][$key]
+						'amount' => $input['additional_particular_rate'][$key]
+					];
+					$payroll_particular[] = [
+						'payroll_id' => $payroll_id,
+						'particulars_id' => $input['additional_name'][$key],
+						'units' => $input['particular_units'][$key],
+						'amount' => $input['additional_particular_rate'][$key]
 					];
 				}
 			}
@@ -100,43 +107,71 @@ class Payslip extends HR_Controller
 					$salary_particular[] = [
 						'employee_id' => $employee_id,
 						'particulars_id' => $input['deduction_name'][$key],
-						'amount' => $input['deduction_particular_amount'][$key]
+						'amount' => $input['deduction_particular_rate'][$key]
+					];
+					$payroll_particular[] = [
+						'payroll_id' => $payroll_id,
+						'particulars_id' => $input['deduction_name'][$key],
+						'units' => 0,
+						'amount' => $input['deduction_particular_rate'][$key]
 					];
 				}
 			}
 
-			if(!empty($salary_particular)){
-				if($this->payslip->insert_salary_particular($salary_particular)){
-					$this->output->set_output(json_encode(['result' => TRUE]));
-						return;
-				}
+			$payroll_update = [
+				'current_daily_wage' => $input['basic_rate'],
+				'daily_wage_units' => $input['basic_rate_units'][0]
+			];
+
+			$payroll_particulars_update = [];
+			foreach ($input['particular_id'] as $key => $value) {
+				$unit = 0;
+				if(isset($input['units'][$key]))
+					$unit = $input['units'][$key];
+
+				$payroll_particulars_update[] = [
+					'particulars_id' => $value,
+					'units' => $unit,
+					'amount' => $input['particular_rate'][$key]
+				];
 			}
-			else{
+
+			$insert_flag = 0;
+			if(!empty($salary_particular) && !empty($payroll_particular)){
+				if($this->payslip->insert_salary_particular($salary_particular, $payroll_particular))
+					$insert_flag = 1;
+			}
+			else
+				$insert_flag = 1;
+
+			$update_flag = 0;
+			if($this->payslip->update_payroll($payroll_id, $payroll_update, $payroll_particulars_update))
+				$update_flag = 1;
+
+			if($insert_flag && $update_flag){
 				$this->output->set_output(json_encode(['result' => TRUE]));
 				return;
 			}
 
 			$this->output->set_output(json_encode([
 				'result' => FALSE,
-				'messages' => ['Unable to make a loan. Please try again later.']
+				'messages' => ['Unable to make save payslip. Please try again later.']
 			]));
 			return;
-		}*/
+		}
 	}
 
 	public function _perform_validation()
 	{
 		$input = $this->input->post();
 		if(isset($input['additional_name'])){
-			echo "rey";
 			$this->form_validation->set_rules('additional_name[]', 'particular name', 'required');
-			$this->form_validation->set_rules('particular_rate[]', 'particular rate', 'required');
+			$this->form_validation->set_rules('additional_particular_rate[]', 'particular rate', 'required');
 		}
 
 		if(isset($input['deduction_name'])){
-			echo "arriesga";
 			$this->form_validation->set_rules('deduction_name[]', 'particular name', 'required');
-			$this->form_validation->set_rules('deduction_particular_amount[]', 'particular rate', 'required');
+			$this->form_validation->set_rules('deduction_particular_rate[]', 'particular rate', 'required');
 		}
 	}
 

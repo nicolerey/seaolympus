@@ -13,9 +13,29 @@ function generate_payment_terms(element){
 
 		$('.payment_terms_tbody').append(payment_term_fields);
 	}
+
+	calculate_payment_total();
+}
+
+function calculate_payment_total(){
+	var payment_total = 0;
+	$('.loan_amount_field').each(function(){
+		payment_total += Number(($(this).val()).replace(",", ""));
+	});
+
+	$('.payment_total').html(commaSeparateNumber(payment_total.toFixed(2)));
+}
+
+function commaSeparateNumber(val){
+    while (/(\d+)(\d{3})/.test(val.toString())){
+      val = val.toString().replace(/(\d+)(\d{3})/, '$1'+', '+'$2');
+    }
+    return val;
 }
 
 $(document).ready(function(){	
+	calculate_payment_total();
+
 	$('.datepicker').datepicker();
 
 	$('.pformat').priceFormat({prefix:''});

@@ -25,42 +25,9 @@ class Payslip_model extends CI_Model
 		$actual_hrs_rendered = 0;
 
 		$pos_workday = json_decode($position['workday'], true);
-		$workdays = [];
-		foreach ($pos_workday as $key=>$value) {
-			$workhours = 0;
-			$first_workhours = 0;
-			$second_workhours = 0;
-			$time_count = 0;
-			foreach ($value['time_breakdown'] as $key1 => $value1) {
-				foreach ($value1 as $key2 => $value2) {
-					$from_time = $value2[0];
-					if($from_time=='12:00 AM')
-						$from_time = '00:00:00';
-
-					$to_time = $value2[1];
-
-					$hour = $to_time - $from_time;
-					$minute = date_format(date_create($to_time), 'i') - date_format(date_create($from_time), 'i');
-
-					$total = abs($hour + ($minute/60));
-					$workhours += $total;
-					if($time_count<2)
-						$first_workhours += $total;
-					else
-						$second_workhours += $total;
-				}
-			}
-
-			array_push($workdays, [
-				'from_day' => $value['from_day'],
-				'to_day' => $value['to_day'],
-				'time_breakdown' => $value['time_breakdown'],
-				'total_workhours' => $workhours
-			]);
-		}
 
 		/*echo "<pre>";
-		print_r($workdays);
+		print_r($pos_workday);
 		echo "</pre>";*/
 
 		$emp_att = [];
@@ -84,82 +51,204 @@ class Payslip_model extends CI_Model
 				}
 
 				$workday_index = $this->search_for_day_in_workday($pos_workday, $day_in);
+				echo "<pre>";
+				print_r($workday_index);
+				echo "</pre><br><br>";
 				if(!empty($workday_index)){
-					$att_flag = 0;
 					foreach ($workday_index as $key => $value) {
-						foreach ($workdays[$value]['time_breakdown'][$day_in] as $key1 => $value1) {
-							$late = 0;
-							$workhours = 0;
-							if($value1[0]<=$time_in && $value1[1]>=$time_in){
-								$time_diff = date_diff(date_create($time_in), date_create($value1[0]));
-								$late = ($time_diff->h * 60) + $time_diff->i + ($time_diff->s / 60);
+						$late = 0;
+						$workhours = 0;
+						$am_workhours = 0;
+						$pm_workhours = 0;
 
-								$workhours = 0;
-								if(($time_out - $time_in)<0){
-									$hour = '12:00 AM' - $time_in;
-									$minute = date_format(date_create('00:00:00'), 'i') - date_format(date_create($time_in), 'i');
-									$workhours += abs($hour + ($minute/60));
+						$att_flag = 0;
+						$am_flag = 1;
+						$first_workday_date1 = date_create($date_in." ".$pos_workday[$value]['time']['from_time_1']);
+						$first_workday_date2 = date_create($date_in." ".$pos_workday[$value]['time']['to_time_1']);
+						$second_workday_date1 = date_create($date_in." ".$pos_workday[$value]['time']['from_time_2']);
+						$second_workday_date2 = date_create($date_in." ".$pos_workday[$value]['time']['to_time_2']);
 
-									$hour = $time_out - '00:00:00';
-									$minute = date_format(date_create($time_out), 'i') - date_format(date_create('00:00:00'), 'i');
-									$workhours += abs($hour + ($minute/60));
-								}
-								else{
-									$hour = $time_out - $time_in;
-									$minute = date_format(date_create($time_out), 'i') - date_format(date_create($time_in), 'i');
-									$workhours = abs($hour + ($minute/60));
-								}
+						if(($pos_workday[$value]['time']['to_time_1'] - $pos_workday[$value]['time']['from_time_1'])<0){
+							$first_workday_date2 = date_modify($first_workday_date2, "+1 day");
+							$second_workday_date1 = date_modify($second_workday_date1, "+1 day");
+							$second_workday_date2 = date_modify($second_workday_date2, "+1 day");
+						}
+						else if(($pos_workday[$value]['time']['to_time_2'] - $pos_workday[$value]['time']['from_time_2'])<0){
+							$second_workday_date1 = date_modify($second_workday_date1, "+1 day");
+							$second_workday_date2 = date_modify($second_workday_date2, "+1 day");
+						}
 
-								$start_date = $date_in;
-								$end_date = $date_out;
-								if($workdays[$value]['from_day']!=$workdays[$value]['to_day'])
-									$end_date = date_format(date_modify(date_create($start_date), "+1 day"), 'Y-m-d');								
+						$broken_time = 0;
+						if(($first_workday_date2>$datetime_in && $first_workday_date2<$datetime_out) && ($second_workday_date1>$datetime_in && $second_workday_date1<$datetime_out)){
+							$time_diff = date_diff($first_workday_date2, $datetime_in);
+							if($first_workday_date1<$datetime_in){
+								$late_diff = date_diff($datetime_in, $first_workday_date1);
+								$late = ($late_diff->h * 60) + $late_diff->i + ($late_diff->s / 60);
+							}
+							else if($first_workday_date1>$datetime_in)
+								$time_diff = date_diff($first_workday_date2, $first_workday_date1);
 
+							$workhours += $time_diff->h + ($time_diff->i / 60) + ($time_diff->i / 60 / 60);
+							$am_workhours += $workhours;
+
+							$time_diff = date_diff($datetime_out, $second_workday_date1);
+							$hours = $time_diff->h + ($time_diff->i / 60) + ($time_diff->i / 60 / 60);
+							$workhours += $hours;
+							$pm_workhours += $hours;
+
+							$att_flag = 1;
+							$broken_time = 1;
+						}
+						else{
+							$second_workday_date1 = date_modify($second_workday_date1, "-1 day");
+							$second_workday_date2 = date_modify($second_workday_date2, "-1 day");
+
+							if($first_workday_date1<=$datetime_in && $first_workday_date2>=$datetime_in){
+								$late_diff = date_diff($datetime_in, $first_workday_date1);
+								$late = ($late_diff->h * 60) + $late_diff->i + ($late_diff->s / 60);
+
+								$time_diff = date_diff($datetime_out, $datetime_in);
+								$workhours += $time_diff->h + ($time_diff->i / 60) + ($time_diff->i / 60 / 60);
+								$am_workhours += $workhours;
+
+								$am_flag = 0;
 								$att_flag = 1;
 							}
-							//else if($value1[0]>=$time_in && ($value1[1]<=$time_out))
+							else if($first_workday_date1>$datetime_in && $first_workday_date1<$datetime_out){
+								$time_diff = date_diff($datetime_out, $first_workday_date1);
+								$workhours += $time_diff->h + ($time_diff->i / 60) + ($time_diff->i / 60 / 60);
+								$am_workhours += $workhours;
 
-							if($att_flag){
-								$emp_att_flag = 1;
-								if(!empty($emp_att)){
-									foreach($emp_att as $emp_att_index=>$emp_att_value){
-										if($emp_att_value['start_date']==$start_date && $emp_att_value['end_date']==$end_date && $emp_att_value['workday_index']==$value){
-											$emp_att[$emp_att_index]['total_late'] += $late;
-											$emp_att[$emp_att_index]['total_working_hours'] += $workhours;
+								$am_flag = 0;
+								$att_flag = 1;
+							}
 
-											$emp_att_flag = 0;
-											break;
-										}
-									}
+							if($am_flag){
+								if($second_workday_date1<=$datetime_in && $second_workday_date2>=$datetime_in){
+									$late_diff = date_diff($datetime_in, $second_workday_date1);
+									$late = ($late_diff->h * 60) + $late_diff->i + ($late_diff->s / 60);
+
+									$time_diff = date_diff($datetime_out, $datetime_in);
+									$workhours += $time_diff->h + ($time_diff->i / 60) + ($time_diff->i / 60 / 60);
+									$pm_workhours += $workhours;
+
+									$att_flag = 1;
 								}
+								else if($second_workday_date1>$datetime_in && $second_workday_date1<$datetime_out){
+									$time_diff = date_diff($datetime_out, $datetime_in);
+									$workhours += $time_diff->h + ($time_diff->i / 60) + ($time_diff->i / 60 / 60);
+									$pm_workhours += $workhours;
 
-								if($emp_att_flag){
-									array_push($emp_att, [
-										'start_date' => $start_date,
-										'end_date' => $end_date,
-										'workday_index' => $value,
-										'total_late' => $late,
-										'total_working_hours' => $workhours
-									]);
+									$att_flag = 1;
 								}
-
-								break;
 							}
 						}
 
-						if($att_flag)
+						if($broken_time){
+							$start_date = date_format($first_workday_date1, 'Y-m-d');
+							$end_date = date_format($second_workday_date2, 'Y-m-d');						
+						}
+						else{
+							if(!$am_flag){
+								$start_date = date_format($first_workday_date1, 'Y-m-d');
+								$end_date = date_format($first_workday_date2, 'Y-m-d');
+							}
+							else{
+								$start_date = date_format(date_modify($second_workday_date1, '-1 day'), 'Y-m-d');
+								$end_date = date_format($second_workday_date2, 'Y-m-d');
+							}
+						}
+
+						if($att_flag){
+							$emp_att_flag = 1;
+							if(!empty($emp_att)){
+								foreach($emp_att as $emp_att_index=>$emp_att_value){
+									if($emp_att_value['start_date']==$start_date && $emp_att_value['end_date']==$end_date && $emp_att_value['workday_index']==$value){
+										$emp_att[$emp_att_index]['total_late'] += $late;
+										$emp_att[$emp_att_index]['total_first_hours'] += $am_workhours;
+										$emp_att[$emp_att_index]['total_second_hours'] += $pm_workhours;
+										$emp_att[$emp_att_index]['total_working_hours'] += $workhours;
+
+										$emp_att_flag = 0;
+										break;
+									}
+								}
+							}
+
+							if($emp_att_flag){
+								array_push($emp_att, [
+									'start_date' => $start_date,
+									'end_date' => $end_date,
+									'workday_index' => $value,
+									'total_late' => $late,
+									'total_first_hours' => $am_workhours,
+									'total_second_hours' => $pm_workhours,
+									'total_working_hours' => $workhours
+								]);
+							}
+
+							echo "<pre>";
+							print_r($datetime_in);
+							print_r($datetime_out);
+							print_r($emp_att);
+							echo "</pre><br><br>";
+
 							break;
+						}
+
+						/*$start_date = $date_in;
+						$end_date = $date_in;
+						if($pos_workday[$value]['from_day']!=$pos_workday[$value]['to_day'] && !$am_flag)
+							$end_date = date_format(date_modify(date_create($end_date), "+1 day"), 'Y-m-d');
+						else if($pos_workday[$value]['from_day']!=$pos_workday[$value]['to_day'] && $am_flag)
+							$start_date = date_format(date_modify(date_create($start_date), "-1 day"), 'Y-m-d');
+
+						if($att_flag){
+							$emp_att_flag = 1;
+							if(!empty($emp_att)){
+								foreach($emp_att as $emp_att_index=>$emp_att_value){
+									if(($emp_att_value['start_date']==$start_date && $emp_att_value['end_date']==$end_date) && $emp_att_value['workday_index']==$value){
+										$emp_att[$emp_att_index]['total_late'] += $late;
+										$emp_att[$emp_att_index]['total_first_hours'] += $am_workhours;
+										$emp_att[$emp_att_index]['total_second_hours'] += $pm_workhours;
+										$emp_att[$emp_att_index]['total_working_hours'] += $workhours;
+
+										$emp_att_flag = 0;
+										break;
+									}
+								}
+							}
+
+							$emp_att_workday_start = date_format(date_create($start_date), 'N');
+							$emp_att_workday_end = date_format(date_create($end_date), 'N');
+							if($pos_workday[$value]['from_day']!=$emp_att_workday_start || $pos_workday[$value]['to_day']!=$emp_att_workday_end)
+								continue;
+
+							if($emp_att_flag){
+								array_push($emp_att, [
+									'start_date' => $start_date,
+									'end_date' => $end_date,
+									'workday_index' => $value,
+									'total_late' => $late,
+									'total_first_hours' => $am_workhours,
+									'total_second_hours' => $pm_workhours,
+									'total_working_hours' => $workhours
+								]);
+							}
+
+							echo "<pre>";
+							print_r($datetime_in);
+							print_r($datetime_out);
+							print_r($emp_att);
+							echo "</pre><br><br>";
+							
+							break;
+						}*/
 					}
 				}
 			}
 		}
 
-		/*echo "<pre>";
-		print_r($emp_att);
-		print_r($employee_data);
-		echo "</pre>";*/
-
-		// $data['salary_template'] = $salary;
 		$data['employee_profile'] = $employee_data;
 		$data['attendance'] = $attendance;
 		$data['additionals'] = [];
@@ -204,16 +293,16 @@ class Payslip_model extends CI_Model
 		$data['regular_overtime_pay'] = 0;
 		if(!empty($emp_att)){
 			foreach ($emp_att as $key => $value) {
-				if($value['total_late']<=$employee_data['allowed_late_period'] && $value['total_working_hours']>=$workdays[$value['workday_index']]['total_workhours']){
+				if($value['total_late']<=$employee_data['allowed_late_period']){
 					$total_late_minutes += $value['total_late'];
-					$total_regular_hrs += $workdays[$value['workday_index']]['total_workhours'];
-					$overtime_hours = $value['total_working_hours'] - $workdays[$value['workday_index']]['total_workhours'];
+					$total_regular_hrs += $pos_workday[$value['workday_index']]['total_working_hours'];
+					$overtime_hours = $value['total_working_hours'] - $pos_workday[$value['workday_index']]['total_working_hours'];
 					$total_overtime_hrs += $overtime_hours;
 
 					$overtime_hrly = ($employee_data['daily_rate'] * $employee_data['overtime_rate']) / 100;
 					$data['regular_overtime_pay'] += round($overtime_hrly * $overtime_hours);
 
-					$total_regular_days++;
+					$total_regular_days += $value['total_working_hours'] / $pos_workday[$value['workday_index']]['total_working_hours'];
 				}
 			}
 		}
@@ -221,7 +310,7 @@ class Payslip_model extends CI_Model
 		$data['daily_wage'] = $employee_data['daily_rate'];
 		$data['late_penalty'] = $employee_data['late_penalty'];
 
-		$data['total_regular_days'] = $total_regular_days;
+		$data['total_regular_days'] = round($total_regular_days, 2);
 		$data['total_overtime_hrs'] = round($total_overtime_hrs, 2);
 		$data['total_late_minutes'] = round($total_late_minutes, 2);
 		$data['total_late_deduction'] = $data['total_late_minutes'] * $employee_data['late_penalty'];
@@ -235,10 +324,7 @@ class Payslip_model extends CI_Model
 
 		$data['net_pay'] = $data['total_earnings'] + $data['total_additionals'] - $data['total_deductions'] - $data['total_late_deduction'];
 		
-		/*echo "<pre>";
-		print_r($data);
-		echo "</pre>";*/
-		return $data;
+		//return $data;
 	}
 
 	public function get_date_difference($datetime_1, $datetime_2)
@@ -269,7 +355,7 @@ class Payslip_model extends CI_Model
 	{
 		$range = phase($month);
 		$payslip = $this->calculate($employee_number, $range[0], $range[1]);
-		if(is_numeric($payslip) || empty($payslip)){
+		/*if(is_numeric($payslip) || empty($payslip)){
 			return;
 		}
 		$data = [
@@ -305,7 +391,7 @@ class Payslip_model extends CI_Model
 
 		$this->db->trans_complete();
 
-		return $this->db->trans_status();
+		return $this->db->trans_status();*/
 	}
 
 	public function check($employee_id, $from, $to)
@@ -340,7 +426,7 @@ class Payslip_model extends CI_Model
 		$data = $this->db->get_where('payroll', ['id' => $id, 'employee_id' => $employee_id])->row_array();
 		if($data){
 			$data['particulars'] = ['deductions' => [], 'additionals' => []];
-			$this->db->select('p.id, p.name, p.type, pp.amount');
+			$this->db->select('p.id, p.name, p.type, pp.amount, pp.units');
 			$this->db->from('payroll_particulars AS pp');
 			$this->db->join('pay_modifiers AS p', 'p.id = pp.particulars_id');
 			$this->db->where('payroll_id', $data['id']);
@@ -365,8 +451,29 @@ class Payslip_model extends CI_Model
 		
 	}
 
-	public function insert_salary_particular($salary_particular)
+	public function insert_salary_particular($salary_particular, $payroll_particular)
 	{
-		return $this->db->insert_batch('salary_particulars', $salary_particular);
+		$salary_flag = 0;
+		if($this->db->insert_batch('salary_particulars', $salary_particular))
+			$salary_flag = 1;
+
+		$pp_flag = 0;
+		if($this->db->insert_batch('payroll_particulars', $payroll_particular))
+			$pp_flag = 1;
+
+		return ($salary_flag && $pp_flag)?TRUE:FALSE;
+	}
+
+	public function update_payroll($payroll_id, $payroll_update, $payroll_particulars_update)
+	{
+		$payrol_flag = 0;
+		$this->db->where('id', $payroll_id);
+		if($this->db->update('payroll', $payroll_update))
+			$payrol_flag = 1;
+
+		$this->db->where('payroll_id', $payroll_id);
+		$this->db->update_batch('payroll_particulars', $payroll_particulars_update, 'particulars_id');
+
+		return ($payrol_flag)?TRUE:FALSE;
 	}
 }
