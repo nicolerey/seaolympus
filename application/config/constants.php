@@ -101,7 +101,6 @@ define('NAV_VIEW_ATTENDANCE', 'view_attendance');
 define('NAV_LOANS', 'loans');
 
 define('SUBNAV_EMPLOYEES', 'employee');
-define('SUBNAV_DIVISIONS', 'division');
 define('SUBNAV_DEPARTMENTS', 'department');
 define('SUBNAV_POSITIONS', 'positions');
 define('SUBNAV_PENDING_REQUESTS', 'pending_requests');

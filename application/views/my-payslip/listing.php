@@ -14,6 +14,9 @@
 			<tr><th>#</th><th>Employee Name</th><th>From</th><th>To</th></tr>      		
       	</thead>
       	<tbody>
+          <?php if(empty($items)):?>
+            <tr><td class="text-center" colspan="4">Nothing to display</td></tr>
+          <?php endif;?>
       		<?php foreach($items AS $row):?>
       			<tr>
               <td><a href="<?= base_url("my_payslip/view/{$row['id']}")?>"><?= str_pad($row['id'], 4, 0, STR_PAD_LEFT)?></a></td>

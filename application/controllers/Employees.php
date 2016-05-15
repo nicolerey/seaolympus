@@ -66,7 +66,6 @@ class Employees extends HR_Controller
 			return;
 		}
 		$input = $this->_format_data(MODE_CREATE);
-		print_r($input);
 		if($this->employee->create($input)){
 			$this->output->set_output(json_encode(['result' => TRUE]));
 			return;
@@ -105,6 +104,31 @@ class Employees extends HR_Controller
 		$this->output->set_output(json_encode([
 			'result' => FALSE,
 			'messages' => ['Unable to update employee. Please try again later.']
+		]));
+		return;
+	}
+
+	public function delete($emp_id)
+	{
+		$this->output->set_content_type('json');
+		if(!$emp_id || !$this->employee->exists($emp_id)){
+			$this->output->set_output(json_encode([
+				'result' => FALSE,
+				'messages' =>['Please provide a valid employee id to delete.']
+			]));
+			return;
+		}
+		$this->id = $emp_id;
+		if($this->employee->delete($emp_id)){
+			$this->output->set_output(json_encode([
+				'result' => TRUE
+			]));
+			return;
+		}
+
+		$this->output->set_output(json_encode([
+			'result' => FALSE,
+			'messages' => ['Unable to delete employee. Please try again later.']
 		]));
 		return;
 	}

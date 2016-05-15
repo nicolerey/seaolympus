@@ -1,4 +1,4 @@
-function delete_loan(element){
+function delete_positions(element){
 	if(confirm('Are you sure?')){
 		var delete_url = $(element).attr('delete_url');
 		$.post(delete_url)
@@ -15,7 +15,3 @@ function delete_loan(element){
 		});
 	}
 }
-
-$(document).ready(function(){	
-	$('.datepicker').datepicker();
-});

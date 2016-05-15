@@ -32,12 +32,6 @@
             <input type="text" class="form-control" name="name" value="<?= preset($data, 'name', '')?>" />
           </div>
         </div>
-        <div class="form-group">
-          <label class="col-sm-2 control-label"><span class="fa fa-asterisk text-danger"></span> Division</label>
-          <div class="col-sm-5">
-            <?= form_dropdown('division_id', ['' => ''] + $divisions_list, preset($data, 'division_id', FALSE), 'class="form-control"');?>
-          </div>
-        </div>
         <?php if($mode === MODE_EDIT):?>
           <hr>
             <div class="form-group">

@@ -32,9 +32,9 @@ class Payslip extends HR_Controller
 		$date = [];
 		$range = phase($input['month']);
 
+		$created = 0;
 		if($input['employee_number'] === 'all'){
 			$all = array_column($this->employee->all(), 'id');
-			$created = 0;
 			foreach($all AS $row){
 				$status = $this->payslip->create($row, $input['month'], 0);
 				if($status === TRUE){
@@ -48,22 +48,14 @@ class Payslip extends HR_Controller
 		if(!$this->employee->exists($input['employee_number'])){
 			redirect('payslip');
 		}
-		
-		$employee_data = $this->employee->get($input['employee_number']);
-		$data = $this->payslip->calculate($input['employee_number'], $range[0], $range[1]);
 
-		if(is_numeric($data)){
-			redirect("my_payslip/view/{$data}?employee_number={$employee_data['id']}");
+		$data = $this->payslip->create($input['employee_number'], $input['month'], 0);
+		if($data){
+			$created = 1;
 		}
 
-		$this->generate_page('payslip/manage', [
-			'title' => 'Manage payslip',
-			'data' => $data,
-			'employee_data' => $employee_data,
-			'from' =>  $range[0],
-			'to' =>  $range[1],
-			'month' => $input['month']
-		]);
+		$this->session->set_flashdata('mass_payroll_status_complete', $created);
+		redirect('payslip');
 	}
 
 

@@ -14,6 +14,7 @@ class Departments extends HR_Controller
 
 	public function index()
 	{
+		$this->import_page_script('department-list.js');
 		$this->generate_page('departments/listing', [
 			'items' => $this->department->all()
 		]);
@@ -21,13 +22,11 @@ class Departments extends HR_Controller
 
 	public function create()
 	{
-		$this->load->model('Division_model', 'division');
 		$this->import_page_script('manage-departments.js');
 		$this->generate_page('departments/manage', [
 			'title' => 'Create new department',
 			'mode' => MODE_CREATE, 
-			'data' => [],
-			'divisions_list' => array_column($this->division->all(), 'name', 'id')
+			'data' => []
 		]);
 	}
 
@@ -36,13 +35,11 @@ class Departments extends HR_Controller
 		if(!$id || !$department = $this->department->get($id)){
 			show_404();
 		}
-		$this->load->model('Division_model', 'division');
 		$this->import_page_script('manage-departments.js');
 		$this->generate_page('departments/manage', [
 			'title' => 'Update existing department',
 			'mode' => MODE_EDIT, 
 			'data' => $department,
-			'divisions_list' => array_column($this->division->all(), 'name', 'id'),
 			'employees_list' => array_column($this->department->get_employees($id), 'fullname', 'id')
 		]);
 	}
@@ -101,6 +98,31 @@ class Departments extends HR_Controller
 		return;
 	}
 
+	public function delete($dept_id)
+	{
+		$this->output->set_content_type('json');
+		if(!$dept_id || !$this->department->exists($dept_id)){
+			$this->output->set_output(json_encode([
+				'result' => FALSE,
+				'messages' =>['Please provide a valid department id to update.']
+			]));
+			return;
+		}
+		$this->id = $dept_id;
+		if($this->department->delete($dept_id)){
+			$this->output->set_output(json_encode([
+				'result' => TRUE
+			]));
+			return;
+		}
+
+		$this->output->set_output(json_encode([
+			'result' => FALSE,
+			'messages' => ['Unable to delete employee. Please try again later.']
+		]));
+		return;
+	}
+
 	public function _perform_validation($mode)
 	{
 		if($mode === MODE_CREATE){
@@ -110,7 +132,6 @@ class Departments extends HR_Controller
 			$this->form_validation->set_rules('name', 'department name', 'required|callback__validate_department_name');
 			$this->form_validation->set_rules('employee_id', 'department supervisor', 'required|callback__validate_employee');
 		}
-		$this->form_validation->set_rules('division_id', 'division', 'required|callback__validate_division');
 	}
 
 	public function _format_data($mode)
@@ -121,7 +142,6 @@ class Departments extends HR_Controller
 		}else{
 			$data += [ 'department' => ['name' => $this->input->post('name')], 'employee_id' => $this->input->post('employee_id') ];
 		}
-		$data += ['division_id' => $this->input->post('division_id')];
 		return $data;
 	}
 
@@ -129,13 +149,6 @@ class Departments extends HR_Controller
 	{
 		$this->form_validation->set_message('_validate_department_name', 'The %s is already in use.');
 		return $this->department->has_unique_name($val, $this->id);
-	}
-
-	public function _validate_division($val)
-	{
-		$this->load->model('Division_model', 'division');
-		$this->form_validation->set_message('_validate_division', 'Please select a valid %s');
-		return $this->division->exists($val);
 	}
 
 	public function _validate_employee($val)

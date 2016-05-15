@@ -64,6 +64,7 @@ function ded_particular_group(){
 
 	dynamic_ded_particulars.find('.deduction_name').attr('name', 'deduction_name[]');
 	dynamic_ded_particulars.find('.deduction_particular_amount').attr('name', 'deduction_particular_rate[]');
+	dynamic_ded_particulars.find('.pformat').priceFormat({prefix:''});
 
 	$('.deduction_particulars_container').append(dynamic_ded_particulars);
 }

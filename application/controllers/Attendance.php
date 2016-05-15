@@ -73,13 +73,11 @@ class Attendance extends HR_Controller
 
 		$search_employee = TRUE;
 
-		if(!empty($range['employee_number'])){
-			if($this->employee->exists($range['employee_number'])){
-				$emp_result = $this->employee->attendance($range['employee_number'], $start_date, $end_date, $upload_batch_id-1);
-			}
-		}
-		else
-			$emp_result = $this->employee->attendance(NULL, NULL, NULL, $upload_batch_id-1);
+		$employee_number = NULL;
+		if(!empty($range['employee_number']))
+			$employee_number = $range['employee_number'];
+
+		$emp_result = $this->employee->attendance($employee_number, $start_date, $end_date, $upload_batch_id-1);
 
 		if($emp_result){
 			$x = 0;
@@ -89,8 +87,12 @@ class Attendance extends HR_Controller
 				$data[$x]['name'] = $name['firstname']." ".$name['middleinitial']." ".$name['lastname'];
 				$data[$x]['datetime_in'] = ($attendance['datetime_in']) ? date_format(date_create($attendance['datetime_in']), 'Y-m-d h:i A') : NULL;
 				$data[$x]['datetime_out'] = ($attendance['datetime_out']) ? date_format(date_create($attendance['datetime_out']), 'Y-m-d h:i A') : NULL;
-				$date_diff = date_diff(date_create($attendance['datetime_out']), date_create($attendance['datetime_in']));
-				$data[$x]['total_hours'] = number_format(($date_diff->d * 24) + $date_diff->h + ($date_diff->i / 60) + ($date_diff->s / 60 / 60), 2);
+				if($attendance['datetime_out']){
+					$date_diff = date_diff(date_create($attendance['datetime_out']), date_create($attendance['datetime_in']));
+					$data[$x]['total_hours'] = number_format(($date_diff->d * 24) + $date_diff->h + ($date_diff->i / 60) + ($date_diff->s / 60 / 60), 2);
+				}
+				else
+					$data[$x]['total_hours'] = number_format(0, 2);
 
 				$x++;
 			}
@@ -122,6 +124,8 @@ class Attendance extends HR_Controller
 			unset($row[0]);
 
 			$upload_batch_id = $this->employee->get_batch_id();
+			if(!$upload_batch_id)
+				$upload_batch_id = 1;
 			foreach ($row as $value) {
 				$col_val = explode("\t", $value);
 				$insert_flag = 1;

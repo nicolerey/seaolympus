@@ -8,6 +8,7 @@
 
   <!-- Default box -->
   <div class="box box-solid">
+      <div class="alert alert-danger hidden"><ul class="list-unstyled"></ul></div>
       <div class="box-body">
         <div class="form-group">
           <form class="form-inline" method="GET" action="<?= current_url()?>">
@@ -30,7 +31,7 @@
         </div>
         <hr>
         <table class="table table-bordered table-condensed table-striped">
-          <thead><tr class="active"><th>#</th><th>Employee Name</th><th>Loan Date</th><th>Loan Amount</th></tr></thead>
+          <thead><tr class="active"><th>#</th><th>Employee Name</th><th>Loan Date</th><th>Loan Amount</th><th></th></tr></thead>
           <tbody>
             <?php if(empty($data)):?>
               <tr><td class="text-center" colspan="5">Nothing to display</td></tr>
@@ -48,6 +49,11 @@
                   </td>
                   <td>
                     <?= $loan['loan']['loan_amount']; ?>
+                  </td>
+                  <td>
+                  <button type="button" delete_url="<?= base_url('loan/delete/'.$loan['loan']['id']);?>" class="btn btn-flat btn-danger btn-xs" onclick="delete_loan(this);">
+                      <span class="glyphicon glyphicon-remove"></span> Delete
+                    </button>
                   </td>
                 </tr>
               <?php endforeach;?>

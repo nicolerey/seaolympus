@@ -30,6 +30,7 @@ class positions extends HR_Controller
 
 	public function index()
 	{
+		$this->import_page_script('position-list.js');
 		$this->generate_page('positions/listing', [
 			'items' => $this->position->all(),
 			'days' => $this->days
@@ -108,6 +109,30 @@ class positions extends HR_Controller
 		$input = $this->_format_data(MODE_EDIT);
 		if($this->position->update($id, $input)){
 			$this->output->set_output(json_encode(['result' => TRUE]));
+			return;
+		}
+		$this->output->set_output(json_encode([
+			'result' => FALSE,
+			'messages' => ['Unable to update position. Please try again later.']
+		]));
+		return;
+	}
+
+	public function delete($pos_id)
+	{
+		$this->output->set_content_type('json');
+		if(!$pos_id || !$this->position->exists($pos_id)){
+			$this->output->set_output(json_encode([
+				'result' => FALSE,
+				'messages' =>['Please provide a valid position id to update.']
+			]));
+			return;
+		}
+		$this->id = $pos_id;
+		if($this->position->delete($pos_id)){
+			$this->output->set_output(json_encode([
+				'result' => TRUE
+			]));
 			return;
 		}
 		$this->output->set_output(json_encode([

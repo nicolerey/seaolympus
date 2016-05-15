@@ -11,8 +11,7 @@ $(document).ready(function(){
         },
         combodate: {
                 minuteStep: 1,
-                minYear: 2000,
-				maxYear: 3000,
+				maxYear: '2030',
 				weekStart: 0
            }
     });

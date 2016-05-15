@@ -74,4 +74,14 @@ class Loan_model extends CI_Model
 
 		return ($update_flag && $insert_flag)?TRUE:FALSE;
 	}
+
+	public function delete($id)
+	{
+		return $this->db->delete('loans', ['id'=>$id]);
+	}
+
+	public function exists($id)
+	{
+		return $this->db->get_where('loans', ['id'=>$id])->num_rows();
+	}
 }

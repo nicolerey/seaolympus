@@ -14,6 +14,9 @@
 			<tr><th>Name</th><th>Particular Type</th><th>Type</th></tr>      		
       	</thead>
       	<tbody>
+          <?php if(empty($items)):?>
+            <tr><td class="text-center" colspan="3">Nothing to display</td></tr>
+          <?php endif;?>
       		<?php foreach($items AS $row):?>
       			<tr>
               <td><a href="<?= base_url("pay_modifiers/edit/{$row['id']}")?>"><?= $row['name']?></a></td>

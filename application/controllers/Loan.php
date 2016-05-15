@@ -33,13 +33,11 @@ class Loan extends HR_Controller
 		$search_employee = TRUE;
 		$emp_result = [];
 
-		if(!empty($range['employee_number'])){
-			if($this->employee->exists($range['employee_number'])){
-				$emp_result = $this->loan->all($range['employee_number'], NULL, $start_date, $end_date);
-			}
-		}
-		else
-			$emp_result = $this->loan->all();
+		$employee_number = NULL;
+		if(!empty($range['employee_number']))
+			$employee_number = $range['employee_number'];
+
+		$emp_result = $this->loan->all($employee_number, NULL, $start_date, $end_date);
 
 		if($emp_result){
 			$search_employee = TRUE;
@@ -105,7 +103,7 @@ class Loan extends HR_Controller
 
 		$input = $this->_format_data();
 		if($input['employee_number']=='all'){
-			$all = array_column($this->employee->all, 'id');
+			$all = array_column($this->employee->all(), 'id');
 			foreach($all as $emp_id){
 				$input['employee_number'] = $emp_id;
 				if($this->loan->create($input)){
@@ -141,6 +139,29 @@ class Loan extends HR_Controller
 		$input = $this->_format_data();
 		if($this->loan->update_loan($input)){
 			$this->output->set_output(json_encode(['result' => TRUE]));
+			return;
+		}
+		$this->output->set_output(json_encode([
+			'result' => FALSE,
+			'messages' => ['Unable to make a loan. Please try again later.']
+		]));
+		return;
+	}
+
+	public function delete($loan_id)
+	{
+		$this->output->set_content_type('json');
+		if(!$loan_id || !$this->loan->exists($loan_id)){
+			$this->output->set_output(json_encode([
+				'result' => FALSE,
+				'messages' => ['Loan does not exist.']
+			]));
+			return;
+		}
+		if($this->loan->delete($loan_id)){			
+			$this->output->set_output(json_encode([
+				'result' => TRUE
+			]));
 			return;
 		}
 		$this->output->set_output(json_encode([

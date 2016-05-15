@@ -40,8 +40,10 @@ class Employee_model extends CI_Model
         return $this->db->trans_status();
     }
 
-    public function all()
+    public function all($id = FALSE)
     {
+        if($id)
+            $this->db->where('emp.id !=', $id);
         $this->db->select('emp.*, dep.name AS department, pos.name AS position');
         $this->db->from($this->table.' AS emp');
         $this->db->join('employee_departments AS empdep', 'empdep.employee_id = emp.id AND empdep.to IS NULL', 'left', FALSE);

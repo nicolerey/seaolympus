@@ -194,8 +194,8 @@ class Payslip_model extends CI_Model
 							}
 
 							/*echo "<pre>";
-							print_r($datetime_in);
-							print_r($datetime_out);
+							//print_r($datetime_in);
+							//print_r($datetime_out);
 							print_r($emp_att);
 							echo "</pre><br><br>";*/
 
@@ -258,10 +258,13 @@ class Payslip_model extends CI_Model
 						$total_overtime_hrs += $overtime_hours;
 					}
 
-					$overtime_hrly = ($employee_data['daily_rate'] * $employee_data['overtime_rate']) / 100;
+					$overtime_hrly = $employee_data['daily_rate'] * ($employee_data['overtime_rate'] / 100) ;
 					$data['regular_overtime_pay'] += round($overtime_hrly * $overtime_hours);
 
-					$total_regular_days += $value['total_working_hours'] / $pos_workday[$value['workday_index']]['total_working_hours'];
+					if($value['total_working_hours']>=$pos_workday[$value['workday_index']]['total_working_hours'])
+						$total_regular_days += 1;
+					else
+						$total_regular_days += $value['total_working_hours'] / $pos_workday[$value['workday_index']]['total_working_hours'];
 				}
 			}
 		}

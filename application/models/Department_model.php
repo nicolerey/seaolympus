@@ -12,24 +12,20 @@ class Department_model extends CI_Model
 
 	public function all()
 	{
-		$this->db->select('dep.id, dep.id_number, dep.name, div.name AS division, CONCAT(emp.lastname, ", ", emp.firstname, " ", emp.middleinitial) AS supervisor', FALSE);
+		$this->db->select('dep.id, dep.id_number, dep.name, CONCAT(emp.lastname, ", ", emp.firstname, " ", emp.middleinitial) AS supervisor', FALSE);
 		$this->db->from($this->table.' AS dep');
-		$this->db->join('division_departments AS divdep', 'divdep.department_id = dep.id', 'left');
-		$this->db->join('divisions AS div', 'div.id = divdep.division_id', 'left');
 		$this->db->join('department_supervisors AS depsup', 'depsup.department_id = dep.id', 'left');
 		$this->db->join('employees AS emp', 'emp.id = depsup.employee_id', 'left');
-		$this->db->where('divdep.to IS NULL', FALSE, FALSE)->where('depsup.to IS NULL', FALSE, FALSE);
 		$this->db->order_by('dep.name', 'ASC');
 		return $this->db->get()->result_array();
 	}
 
 	public function get($id)
 	{
-		$this->db->select('dep.id, dep.id_number, dep.name, divdep.division_id, depsup.employee_id');
+		$this->db->select('dep.id, dep.id_number, dep.name, depsup.employee_id');
 		$this->db->from($this->table.' AS dep');
-		$this->db->join('division_departments AS divdep', 'divdep.department_id = dep.id', 'left');
 		$this->db->join('department_supervisors AS depsup', 'depsup.department_id = dep.id', 'left');
-		$this->db->where('dep.id', $id)->where('divdep.to IS NULL', FALSE, FALSE)->where('depsup.to IS NULL', FALSE, FALSE);;
+		$this->db->where('dep.id', $id)->where('depsup.to IS NULL', FALSE, FALSE);;
 		return $this->db->get()->row_array();
 	}
 
@@ -39,9 +35,6 @@ class Department_model extends CI_Model
 
 		$this->db->insert($this->table, $data['department']);
 		$id = $this->db->insert_id();
-
-		$division = ['department_id' => $id, 'division_id' => $data['division_id'], 'from' => date('Y-m-d')];
-		$this->db->insert('division_departments', $division);
 
 		$this->db->trans_complete();
 
@@ -55,7 +48,7 @@ class Department_model extends CI_Model
 		$this->db->update($this->table, $data['department'], ['id' => $id]);
 		
 		// select current division of the department
-		$this->db->select('division_id')->where('department_id', $id)->where('`to` IS NULL', FALSE, FALSE);
+		/*$this->db->select('division_id')->where('department_id', $id)->where('`to` IS NULL', FALSE, FALSE);
 		$result = $this->db->get('division_departments')->row_array();
 		$current_division = $result['division_id'];
 
@@ -66,7 +59,7 @@ class Department_model extends CI_Model
 
 			$division = ['department_id' => $id, 'division_id' => $data['division_id'], 'from' => date('Y-m-d')];
 			$this->db->insert('division_departments', $division);
-		}
+		}*/
 
 		
 		// select current supervisor
